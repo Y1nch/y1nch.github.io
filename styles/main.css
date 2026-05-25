@@ -115,6 +115,9 @@ body{
 .player-meta{color:var(--muted);margin-top:8px}
 .site-footer{padding:24px 0;border-top:1px solid rgba(255,255,255,0.02);text-align:center;color:var(--muted)}
 
+.logo-img{width:56px;height:56px;border-radius:50%;object-fit:cover;box-shadow: 0 6px 20px rgba(124,58,237,0.18)}
+
+
 @media (max-width:900px){
     .header-inner{flex-direction:column;gap:12px;align-items:flex-start}
     .section-grid{grid-template-columns:1fr}
@@ -133,3 +136,5 @@ body{
     .discord-stats div{min-width:100%;}
     .discord-tags .tag{max-width:100%;}
 }
+
+
