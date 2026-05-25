@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遊戲玩家個人頁</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="brand">
+                <div class="logo-circle">G</div>
+                <div class="brand-text">
+                    <p class="eyebrow">只是個人</p>
+                    <h1 class="site-title">@Yinch</h1>
+                </div>
+            </div>
+            <nav class="site-nav">
+                <a href="#about">關於我</a>
+                <a href="#games">遊戲清單</a>
+                <a href="videos.html">影片</a>
+            </nav>
+        </div>
+    </header>
+
+    <section id="hero" class="hero-section">
+        <div class="container hero-content">
+            <div class="hero-copy">
+                <p class="hero-subtitle">FPS、開放世界</p>
+                <h2 class="hero-title">關於我遊玩的遊戲</h2>
+                <p class="hero-desc">遊戲畫面收藏、紀念。</p>
+                <div class="hero-actions">
+                    <a href="#games" class="btn btn-primary">我的收藏</a>
+                    <a href="videos.html" class="btn btn-secondary">最近影片</a>
+                </div>
+            </div>
+            <aside class="hero-aside">
+                <div class="discord-profile">
+                    <div class="avatar" style="background-image: url('assets/profile.jpg')"></div>
+                    <div class="discord-body">
+                        <div class="discord-header">
+                            <h3 class="discord-username">Smol Y <span class="discriminator">#Yinch</span></h3>
+                            <span class="status online" title="線上"></span>
+                        </div>
+                        <p class="discord-bio">喜歡跟朋友輕鬆開團、擔任隊伍的策略與火力輸出。會在 Discord 分享截圖與短片。</p>
+                        <div class="discord-tags">
+                            <span class="tag">戰術協作</span>
+                            <span class="tag">操肝人士</span>
+                            <span class="tag">開放世界</span>
+                        </div>
+                        <div class="discord-stats">
+                            <div>
+                                <strong>上線時間</strong>
+                                <p>假日整天 / 平日晚上</p>
+                            </div>
+                            <div>
+                                <strong>不開放好友申請</strong>
+                                <p>日後會再嘗試開發DC群組讓各位加入</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <main>
+        <section id="about" class="section-block">
+            <div class="container section-grid">
+                <div class="section-text">
+                    <h2>關於我</h2>
+                    <p>我是熱愛遊戲的玩家，喜歡探索與挑戰高難度內容，也喜歡在直播與社群中與觀眾互動。</p>
+                    <div class="skill-list">
+                        <span>戰術協作</span>
+                        <span>技術擔當</span>
+                        <span>天賦稍可</span>
+                        <span>社群互動</span>
+                    </div>
+                </div>
+                <div class="about-cards">
+                    <article class="info-card">
+                        <h3>遊戲時間</h3>
+                        <p>通常假日會整天玩，平日則以晚上為主。</p>
+                    </article>
+                    <article class="info-card">
+                        <h3>遊戲風格</h3>
+                        <p>偏好策略與團隊合作，節奏偏快。</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="games" class="section-block section-alt">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>我的遊戲清單</h2>
+                    <p>近期最常玩的遊戲，含冒險、射擊與競技類型。</p>
+                </div>
+                <div class="project-grid" id="projectGrid">
+                    <!-- 由 scripts/main.js 動態插入遊戲卡片 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- stats and contact removed: site is now read-only and for browsing only -->
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>© 2026 Yinch介紹網頁 </p>
+        </div>
+    </footer>
+
+    <!-- Game preview modal -->
+    <div id="gameModal" class="modal" aria-hidden="true">
+        <div class="modal-inner">
+            <button class="modal-close" aria-label="關閉">關閉</button>
+            <img id="modalImage" src="" alt="遊戲畫面">
+            <div class="modal-caption" id="modalCaption"></div>
+        </div>
+    </div>
+
+    <script src="scripts/main.js"></script>
+</body>
+</html>

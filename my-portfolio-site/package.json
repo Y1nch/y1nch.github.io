@@ -1,0 +1,22 @@
+{
+  "name": "my-portfolio-site",
+  "version": "1.0.0",
+  "description": "A personal portfolio website to showcase my projects and skills.",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server",
+    "build": "echo 'Build step not defined'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "portfolio",
+    "website",
+    "personal"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "live-server": "^1.2.1"
+  }
+}
