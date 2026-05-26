@@ -1,55 +1,48 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的影片庫</title>
+    <title>影片</title>
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <header class="site-header">
-        <div class="container header-inner">
-            <div class="brand">
-                <div class="logo-circle">G</div>
-                <div class="brand-text">
-                    <p class="eyebrow">遊戲玩家</p>
-                    <h1 class="site-title">我的影片庫</h1>
-                </div>
-            </div>
-            <nav class="site-nav">
-                <a href="index.html">首頁</a>
-                <a href="#upload">上傳影片</a>
-            </nav>
-        </div>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">首頁</a></li>
+                <li><a href="videos.html">影片</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <main class="section-block video-page">
-        <div class="container">
-            <section id="upload" class="section-heading">
-                <h2>上傳並收藏你的遊戲影片（僅本機）</h2>
-                <p>使用此頁面上傳你錄好的影片，會儲存在瀏覽器的 IndexedDB（僅於此裝置與瀏覽器可見）。</p>
-                <div class="upload-controls">
-                    <input type="file" id="videoFile" accept="video/*">
-                    <input type="text" id="videoTitle" placeholder="影片標題（選填）">
-                    <button id="uploadBtn" class="btn btn-primary">上傳並儲存</button>
-                </div>
-            </section>
+    <main>
+        <section id="upload-video">
+            <h2>上傳新影片</h2>
+            <form id="video-upload-form" enctype="multipart/form-data">
+                <label for="video-title">標題:</label>
+                <input type="text" id="video-title" name="title" required><br><br>
 
-            <section class="section-block">
-                <h2>我的影片</h2>
-                <div id="videoList" class="video-list"></div>
-                <div id="playerWrapper" class="player-wrapper" style="display:none">
-                    <video id="player" controls width="100%"></video>
-                    <div class="player-meta" id="playerMeta"></div>
-                </div>
-            </section>
-        </div>
+                <label for="video-description">描述:</label>
+                <textarea id="video-description" name="description"></textarea><br><br>
+
+                <label for="video-file">影片檔案:</label>
+                <input type="file" id="video-file" name="video" accept="video/*" required><br><br>
+
+                <button type="submit">上傳影片</button>
+            </form>
+        </section>
+
+        <section id="video-list">
+            <h2>已上傳影片</h2>
+            <div id="videos-container">
+                <!-- Videos will be loaded here by JavaScript -->
+            </div>
+        </section>
     </main>
 
-    <footer class="site-footer">
-        <div class="container">
-            <p>© 2024 遊戲玩家個人頁. 版權所有。</p>
-        </div>
+    <footer>
+        <p>&copy; 2026 Yinch 的作品集</p>
     </footer>
 
     <script src="scripts/videos.js"></script>
