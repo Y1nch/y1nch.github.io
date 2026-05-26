@@ -9,9 +9,17 @@ const app = express();
 // Railway 通常會自動分配 PORT（例如 8080），維持 process.env.PORT 非常正確
 const port = process.env.PORT || 3000;
 
+// 引入 auth 路由
+const authRoutes = require('./auth');
+// 引入 db 連線，確保 users 表會被創建
+require('./db'); 
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 使用 auth 路由
+app.use('/api/auth', authRoutes);
 
 // 確保 uploads 資料夾在伺服器啟動時一定存在
 const uploadDir = path.join(__dirname, 'uploads');

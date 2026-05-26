@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html">首頁</a>
+            <a href="videos.html">影片</a>
+            <a href="register.html">註冊</a>
+            <a href="login.html">登入</a>
+        </nav>
+    </header>
+    <main>
+        <h1>登入</h1>
+        <form id="loginForm">
+            <label for="username">用戶名:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">密碼:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">登入</button>
+        </form>
+        <p id="message"></p>
+    </main>
+    <footer>
+        <p>&copy; 2026 我的個人網站</p>
+    </footer>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                const messageElement = document.getElementById('message');
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token); // 將 token 儲存到 localStorage
+                    messageElement.style.color = 'green';
+                    messageElement.textContent = '登入成功！';
+                    window.location.href = 'index.html'; // 登入成功後跳轉到首頁
+                } else {
+                    const errorData = await response.text();
+                    messageElement.style.color = 'red';
+                    messageElement.textContent = `登入失敗: ${errorData}`;
+                }
+            } catch (error) {
+                console.error('錯誤:', error);
+                document.getElementById('message').style.color = 'red';
+                document.getElementById('message').textContent = '伺服器連接錯誤。';
+            }
+        });
+    </script>
+</body>
+</html>
