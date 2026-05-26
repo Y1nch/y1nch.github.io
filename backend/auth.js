@@ -141,7 +141,7 @@ const authenticateAdmin = (req, res, next) => {
 
 // 取得所有用戶 (需要管理員權限)
 router.get('/users', authenticateAdmin, (req, res) => {
-    connection.query('SELECT id, username, role, created_at FROM users', (err, results) => {
+    connection.query('SELECT id, username, role, avatar, created_at FROM users', (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).send('資料庫查詢錯誤');

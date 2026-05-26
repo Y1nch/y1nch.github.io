@@ -271,19 +271,84 @@
             if (token && navUl) {
                 const payload = parseJwt(token);
                 if (payload && payload.username) {
-                    const avatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
                     const avatarLi = document.createElement('li');
                     avatarLi.style.display = 'flex';
                     avatarLi.style.alignItems = 'center';
                     
                     const avatarImg = document.createElement('img');
-                    avatarImg.src = avatarUrl;
                     avatarImg.alt = payload.username;
-                    avatarImg.title = payload.username;
+                    avatarImg.title = `${payload.username} (點擊可上傳/更換頭像)`;
                     avatarImg.style.width = '32px';
                     avatarImg.style.height = '32px';
                     avatarImg.style.borderRadius = '50%';
                     avatarImg.style.border = '2px solid #3b82f6';
+                    avatarImg.style.cursor = 'pointer';
+                    avatarImg.style.transition = 'transform 0.2s';
+                    avatarImg.onmouseover = () => avatarImg.style.transform = 'scale(1.15)';
+                    avatarImg.onmouseout = () => avatarImg.style.transform = 'scale(1)';
+                    
+                    // 獲取最新 Profile 頭像
+                    let finalAvatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
+                    try {
+                        const profileRes = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (profileRes.ok) {
+                            const profileData = await profileRes.json();
+                            if (profileData.avatar) {
+                                finalAvatarUrl = `${BACKEND_URL}/uploads/${profileData.avatar}`;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('獲取頭像失敗，使用預設頭像:', err);
+                    }
+                    avatarImg.src = finalAvatarUrl;
+
+                    // 同步更新左上角的 logo-avatar
+                    const logoAvatar = document.querySelector('.logo-avatar');
+                    if (logoAvatar) {
+                        logoAvatar.src = finalAvatarUrl;
+                    }
+
+                    // 點擊更換頭像功能
+                    const avatarInput = document.createElement('input');
+                    avatarInput.type = 'file';
+                    avatarInput.accept = 'image/*';
+                    avatarInput.style.display = 'none';
+                    document.body.appendChild(avatarInput);
+
+                    avatarImg.addEventListener('click', () => {
+                        avatarInput.click();
+                    });
+
+                    avatarInput.addEventListener('change', async () => {
+                        if (avatarInput.files.length === 0) return;
+                        const file = avatarInput.files[0];
+                        const formData = new FormData();
+                        formData.append('avatar', file);
+
+                        try {
+                            const uploadRes = await fetch(`${BACKEND_URL}/api/auth/avatar`, {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                                body: formData
+                            });
+
+                            if (uploadRes.ok) {
+                                const uploadData = await uploadRes.json();
+                                alert('頭像上傳成功！');
+                                avatarImg.src = `${BACKEND_URL}/uploads/${uploadData.avatar}`;
+                                // 重新載入頁面以更新所有位置的頭像
+                                window.location.reload();
+                            } else {
+                                const errMsg = await uploadRes.text();
+                                alert(`更換頭像失敗: ${errMsg}`);
+                            }
+                        } catch (err) {
+                            console.error('更換頭像錯誤:', err);
+                            alert('更換頭像發生錯誤，請稍後再試。');
+                        }
+                    });
                     
                     avatarLi.appendChild(avatarImg);
                     navUl.appendChild(avatarLi);
@@ -340,14 +405,17 @@
 
                     users.forEach(user => {
                         const tr = document.createElement('tr');
-                        const avatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(user.username)}`;
+                        let avatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(user.username)}`;
+                        if (user.avatar) {
+                            avatarUrl = `${BACKEND_URL}/uploads/${user.avatar}`;
+                        }
                         
                         const isMainAdmin = user.username === 'Yinch';
 
                         tr.innerHTML = `
                             <td>
                                 <div class="avatar-cell">
-                                    <img src="${avatarUrl}" class="user-table-avatar" alt="">
+                                    <img src="${avatarUrl}" class="user-table-avatar" alt="" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #3b82f6;">
                                     <strong>${user.username}</strong>
                                 </div>
                             </td>

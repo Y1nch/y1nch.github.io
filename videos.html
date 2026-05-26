@@ -265,7 +265,6 @@
         <nav>
             <ul>
                 <li><a href="index.html">關於我</a></li>
-                <li><a href="index.html#games">遊戲清單</a></li> 
                 <li><a href="videos.html" class="active">影片</a></li>
                 <li><a href="login.html">登入</a></li>
                 <li><a href="register.html">註冊</a></li>
@@ -410,6 +409,12 @@
                         console.error('獲取頭像失敗，使用預設頭像:', err);
                     }
                     avatarImg.src = finalAvatarUrl;
+
+                    // 同步更新左上角的 logo-avatar
+                    const logoAvatar = document.querySelector('.logo-avatar');
+                    if (logoAvatar) {
+                        logoAvatar.src = finalAvatarUrl;
+                    }
 
                     // 點擊更換頭像功能
                     const avatarInput = document.createElement('input');

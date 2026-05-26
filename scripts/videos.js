@@ -186,8 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${deleteBtnHtml}
             </div>
             <div class="video-player-wrapper">
-              <video controls>
-                <source src="${BACKEND_URL}/uploads/${video.filename}" type="video/mp4">
+              <video controls src="${BACKEND_URL}/uploads/${video.filename}" style="width: 100%; height: 100%; object-fit: contain;">
                 您的瀏覽器不支援此影片標籤。
               </video>
             </div>
