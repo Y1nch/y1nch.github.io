@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const videoUploadForm = document.getElementById("video-upload-form");
   const videosContainer = document.getElementById("videos-container");
 
-  // ⭐ 已經成功幫你換成 Railway 的雲端公網網址！
+  // ⭐ Railway 雲端公網網址
   const BACKEND_URL = "https://y1nchgithubio-production.up.railway.app"; 
 
   if (videoUploadForm) {
@@ -43,31 +43,32 @@ document.addEventListener("DOMContentLoaded", () => {
         videosContainer.innerHTML = "";
         
         if (videos.length === 0) {
-          videosContainer.innerHTML = "<p style='color: #64748b;'>目前還沒有任何影片，快來上傳一個吧！</p>";
+          videosContainer.innerHTML = "<p style='color: #64748b; text-align: center; margin-top: 20px;'>目前還沒有任何影片，快來上傳一個吧！</p>";
           return;
         }
 
         videos.forEach((video) => {
           const videoElement = document.createElement("div");
-          videoElement.classList.add("video-item");
           
-          // 加上一些簡單精緻的 CSS 陰影樣式
-          videoElement.style.backgroundColor = "#1e293b";
-          videoElement.style.padding = "20px";
-          videoElement.style.borderRadius = "8px";
-          videoElement.style.marginBottom = "20px";
-          videoElement.style.border = "1px solid #334155";
-
+          // ⭕ 1. 改為對應 HTML 裡全新設計的科技藍微光外框 Class
+          videoElement.classList.add("video-card");
+          
+          // ⭕ 2. 完美的結構填充：左側放文字區（video-info）、右側放安全播放器（video-player-wrapper）
+          // 這樣影片控制條就會被死死鎖在框框內，絕對不會再爆出去了！
           videoElement.innerHTML = `
-            <h3 style="margin-top:0; color:#ffffff;">${video.title}</h3>
-            <p style="color:#cbd5e1; font-size:0.95rem;">${video.description || '無描述'}</p>
-            <video controls width="100%" style="border-radius:6px; background:#0f172a;">
-              <source src="${BACKEND_URL}/uploads/${video.filename}" type="video/mp4">
-              您的瀏覽器不支援此影片標籤。
-            </video>
-            <p style="color:#64748b; font-size:0.85rem; margin-bottom:0; margin-top:10px;">
-              上傳時間: ${new Date(video.upload_date).toLocaleString()}
-            </p>
+            <div class="video-info">
+              <h3 class="video-card-title">${video.title}</h3>
+              <p class="video-card-desc">${video.description || '暫無描述。'}</p>
+              <span class="video-card-time">
+                上傳時間: ${new Date(video.upload_date).toLocaleString()}
+              </span>
+            </div>
+            <div class="video-player-wrapper">
+              <video controls>
+                <source src="${BACKEND_URL}/uploads/${video.filename}" type="video/mp4">
+                您的瀏覽器不支援此影片標籤。
+              </video>
+            </div>
           `;
           videosContainer.appendChild(videoElement);
         });
