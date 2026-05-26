@@ -227,4 +227,31 @@ router.post('/avatar', upload.single('avatar'), (req, res) => {
     });
 });
 
+// 刪除用戶 (僅系統主要管理員 Yinch 可操作，且禁止刪除 Yinch 自身的帳號)
+router.delete('/users/:id', authenticateAdmin, (req, res) => {
+    const userId = req.params.id;
+
+    if (req.user.username !== 'Yinch') {
+        return res.status(403).send('無此操作權限，只有系統主要管理員 Yinch 才能刪除帳號');
+    }
+
+    // 先檢查要被刪除的使用者是否是 Yinch 本人
+    connection.query('SELECT username FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) return res.status(500).send('資料庫查詢錯誤');
+        if (results.length === 0) return res.status(404).send('找不到該使用者');
+
+        if (results[0].username === 'Yinch') {
+            return res.status(403).send('禁止刪除系統主要管理員 Yinch 的帳號');
+        }
+
+        connection.query('DELETE FROM users WHERE id = ?', [userId], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('刪除失敗');
+            }
+            res.send('使用者刪除成功');
+        });
+    });
+});
+
 module.exports = router;

@@ -475,6 +475,32 @@
                 alert('變更失敗，請檢查網路。');
             }
         }
+
+        // 刪除用戶
+        async function deleteUser(userId) {
+            if (confirm('確定要刪除此用戶嗎？')) {
+                const token = localStorage.getItem('token');
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/auth/users/${userId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        alert('用戶刪除成功！');
+                        await loadUsers();
+                    } else {
+                        const errorText = await response.text();
+                        alert(`刪除失敗: ${errorText}`);
+                    }
+                } catch (error) {
+                    console.error('刪除用戶失敗:', error);
+                    alert('刪除失敗，請檢查網路。');
+                }
+            }
+        }
     </script>
 </body>
 </html>
