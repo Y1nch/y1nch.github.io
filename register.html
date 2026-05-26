@@ -27,9 +27,62 @@
         <p id="message"></p>
     </main>
     <footer>
-        <p>&copy; 2026 我的個人網站</p>
+        <p>&copy; 2026 精華分享網站</p>
     </footer>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const nav = document.querySelector('header nav');
+            
+            function parseJwt(token) {
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    return JSON.parse(jsonPayload);
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            if (token && nav) {
+                const loginLink = nav.querySelector('a[href="login.html"]');
+                const registerLink = nav.querySelector('a[href="register.html"]');
+                if (loginLink) loginLink.remove();
+                if (registerLink) registerLink.remove();
+                
+                const payload = parseJwt(token);
+                if (payload && payload.username) {
+                    const avatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = avatarUrl;
+                    avatarImg.alt = payload.username;
+                    avatarImg.title = payload.username;
+                    avatarImg.style.width = '32px';
+                    avatarImg.style.height = '32px';
+                    avatarImg.style.borderRadius = '50%';
+                    avatarImg.style.border = '2px solid #3b82f6';
+                    avatarImg.style.verticalAlign = 'middle';
+                    avatarImg.style.marginLeft = '18px';
+                    nav.appendChild(avatarImg);
+                }
+                
+                const logoutBtn = document.createElement('a');
+                logoutBtn.href = '#';
+                logoutBtn.textContent = '登出';
+                logoutBtn.style.marginLeft = '18px';
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    alert('已成功登出！');
+                    window.location.reload();
+                });
+                nav.appendChild(logoutBtn);
+            }
+        });
+
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;

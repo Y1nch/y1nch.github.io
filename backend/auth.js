@@ -98,4 +98,54 @@ router.post('/create-admin', async (req, res) => {
     }
 });
 
+// 管理員認證中間件
+const authenticateAdmin = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).send('未提供認證 token');
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).send('token 無效或已過期');
+        }
+        if (decoded.role !== 'admin') {
+            return res.status(403).send('無此操作權限，需要管理員身份');
+        }
+        req.user = decoded;
+        next();
+    });
+};
+
+// 取得所有用戶 (需要管理員權限)
+router.get('/users', authenticateAdmin, (req, res) => {
+    connection.query('SELECT id, username, role, created_at FROM users', (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('資料庫查詢錯誤');
+        }
+        res.json(results);
+    });
+});
+
+// 更新用戶角色 (需要管理員權限)
+router.put('/users/:id/role', authenticateAdmin, (req, res) => {
+    const userId = req.params.id;
+    const { role } = req.body;
+
+    if (!['user', 'admin'].includes(role)) {
+        return res.status(400).send('無效的角色類型');
+    }
+
+    connection.query('UPDATE users SET role = ? WHERE id = ?', [role, userId], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('更新失敗');
+        }
+        res.send('使用者權限更新成功');
+    });
+});
+
 module.exports = router;

@@ -106,6 +106,62 @@ app.get('/api/videos', (req, res) => {
   });
 });
 
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
+// 管理員認證中間件
+const authenticateAdmin = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ message: '未提供認證 token' });
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ message: 'token 無效或已過期' });
+    if (decoded.role !== 'admin') return res.status(403).json({ message: '無此操作權限' });
+    req.user = decoded;
+    next();
+  });
+};
+
+// 刪除影片 API (需要管理員權限)
+app.delete('/api/videos/:id', authenticateAdmin, (req, res) => {
+  const videoId = req.params.id;
+
+  // 先找出影片檔名，然後刪除實體檔案
+  const selectSql = 'SELECT filename FROM videos WHERE id = ?';
+  db.query(selectSql, [videoId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: '資料庫查詢錯誤' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ message: '找不到此影片' });
+    }
+
+    const filename = results[0].filename;
+    const filePath = path.join(uploadDir, filename);
+
+    // 從資料庫中刪除
+    const deleteSql = 'DELETE FROM videos WHERE id = ?';
+    db.query(deleteSql, [videoId], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: '刪除影片記錄失敗' });
+      }
+
+      // 刪除硬碟中的檔案
+      fs.unlink(filePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error('刪除實體檔案失敗:', unlinkErr);
+          // 雖然檔案刪除失敗，但資料庫已刪，故仍返回成功
+        }
+        res.status(200).json({ message: '影片刪除成功' });
+      });
+    });
+  });
+});
+
 // Serve uploaded videos
 app.use('/uploads', express.static(uploadDir));
 

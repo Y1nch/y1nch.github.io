@@ -111,7 +111,7 @@
 
     <footer class="site-footer">
         <div class="container footer-inner">
-            <p>© 2026 Yinch介紹網頁 </p>
+            <p>© 2026 精華分享網頁 </p>
         </div>
     </footer>
 
@@ -131,13 +131,50 @@
             const token = localStorage.getItem('token');
             const nav = document.querySelector('.site-nav');
             
+            function parseJwt(token) {
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    return JSON.parse(jsonPayload);
+                } catch (e) {
+                    return null;
+                }
+            }
+
             if (token && nav) {
-                // 已登入：移除「登入」「註冊」，並加入「登出」按鈕
+                // 已登入：移除「登入」「註冊」，並加入頭像與「登出」按鈕
                 const loginBtn = nav.querySelector('a[href="login.html"]');
                 const registerBtn = nav.querySelector('a[href="register.html"]');
                 if (loginBtn) loginBtn.remove();
                 if (registerBtn) registerBtn.remove();
                 
+                const payload = parseJwt(token);
+                if (payload && payload.username) {
+                    const avatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = avatarUrl;
+                    avatarImg.alt = payload.username;
+                    avatarImg.title = payload.username;
+                    avatarImg.style.width = '32px';
+                    avatarImg.style.height = '32px';
+                    avatarImg.style.borderRadius = '50%';
+                    avatarImg.style.border = '2px solid #3b82f6';
+                    avatarImg.style.verticalAlign = 'middle';
+                    avatarImg.style.marginLeft = '18px';
+                    nav.appendChild(avatarImg);
+                }
+
+                if (payload && payload.role === 'admin') {
+                    const adminLink = document.createElement('a');
+                    adminLink.href = 'admin.html';
+                    adminLink.className = 'nav-auth-btn';
+                    adminLink.textContent = '管理後台';
+                    nav.appendChild(adminLink);
+                }
+
                 const logoutBtn = document.createElement('a');
                 logoutBtn.href = '#';
                 logoutBtn.className = 'nav-auth-btn';

@@ -33,6 +33,39 @@ connection.connect(err => {
             return;
         }
         console.log('users 表已準備就緒或已存在');
+
+        // 自動建立主要管理員帳號 Yinch / bede0221
+        const bcrypt = require('bcryptjs');
+        const adminUsername = 'Yinch';
+        const adminPasswordRaw = 'bede0221';
+        
+        connection.query('SELECT * FROM users WHERE username = ?', [adminUsername], async (err, results) => {
+            if (err) {
+                console.error('檢查管理員帳號失敗:', err);
+                return;
+            }
+            if (results.length === 0) {
+                try {
+                    const hashedPassword = await bcrypt.hash(adminPasswordRaw, 10);
+                    connection.query('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [adminUsername, hashedPassword, 'admin'], (err) => {
+                        if (err) {
+                            console.error('建立主要管理員失敗:', err);
+                        } else {
+                            console.log(`主要管理員 ${adminUsername} 建立成功`);
+                        }
+                    });
+                } catch (hashErr) {
+                    console.error('密碼加密失敗:', hashErr);
+                }
+            } else {
+                // 確保現有的 Yinch 帳戶角色一定是 admin
+                if (results[0].role !== 'admin') {
+                    connection.query('UPDATE users SET role = ? WHERE username = ?', ['admin', adminUsername], (err) => {
+                        if (err) console.error('更新主要管理員權限失敗:', err);
+                    });
+                }
+            }
+        });
     });
 });
 
