@@ -338,6 +338,15 @@
         <p>&copy; 2026 精華分享網站</p>
     </footer>
 
+    <!-- 圖片放大 Modal -->
+    <div id="imageModal" class="modal" aria-hidden="true">
+        <div class="modal-inner">
+            <button class="modal-close" aria-label="關閉">關閉</button>
+            <img id="modalImage" src="" alt="圖片放大" style="max-height: 80vh; object-fit: contain;">
+            <div class="modal-caption" id="modalCaption"></div>
+        </div>
+    </div>
+
     <script src="scripts/videos.js"></script>
     <script>
         // 登出與狀態切換邏輯

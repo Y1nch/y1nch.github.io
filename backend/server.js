@@ -178,7 +178,7 @@ app.get('/api/videos', (req, res) => {
   });
 });
 
-// 管理員認證中間件
+// 管理員認證中間件 (即時從資料庫比對最新 role 角色，升級後免重新登入立即生效)
 const authenticateAdmin = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -187,9 +187,19 @@ const authenticateAdmin = (req, res, next) => {
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ message: 'token 無效或已過期' });
-    if (decoded.role !== 'admin') return res.status(403).json({ message: '無此操作權限' });
-    req.user = decoded;
-    next();
+    
+    // 即時跟資料庫校對是否已被升級成管理員
+    db.query('SELECT role, username FROM users WHERE id = ?', [decoded.id], (dbErr, results) => {
+      if (dbErr || results.length === 0) {
+        return res.status(403).json({ message: '使用者不存在或系統錯誤' });
+      }
+      const user = results[0];
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: '無此操作權限，需要管理員身份' });
+      }
+      req.user = { id: decoded.id, username: user.username, role: user.role };
+      next();
+    });
   });
 };
 

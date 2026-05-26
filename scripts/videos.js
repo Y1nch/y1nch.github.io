@@ -163,8 +163,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const token = localStorage.getItem('token');
-        const payload = token ? parseJwt(token) : null;
-        const isAdmin = payload && payload.role === 'admin';
+        let isAdmin = false;
+        if (token) {
+          try {
+            const profileRes = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (profileRes.ok) {
+              const profileData = await profileRes.json();
+              isAdmin = profileData.role === 'admin';
+            }
+          } catch (e) {
+            console.error('即時載入身分失敗:', e);
+          }
+        }
 
         videos.forEach((video) => {
           const videoElement = document.createElement("div");
@@ -214,8 +226,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const token = localStorage.getItem('token');
-        const payload = token ? parseJwt(token) : null;
-        const isAdmin = payload && payload.role === 'admin';
+        let isAdmin = false;
+        if (token) {
+          try {
+            const profileRes = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (profileRes.ok) {
+              const profileData = await profileRes.json();
+              isAdmin = profileData.role === 'admin';
+            }
+          } catch (e) {
+            console.error('即時載入身分失敗:', e);
+          }
+        }
 
         images.forEach((image) => {
           const imageElement = document.createElement("div");
@@ -237,7 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${deleteBtnHtml}
             </div>
             <div class="video-player-wrapper" style="background-color: transparent;">
-              <img src="${BACKEND_URL}/uploads/${image.filename}" alt="${image.title}" style="width: 100%; height: auto; border-radius: 8px; display: block; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+              <img src="${BACKEND_URL}/uploads/${image.filename}" alt="${image.title}" style="width: 100%; height: auto; border-radius: 8px; display: block; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer;" onclick="window.openImageModal('${BACKEND_URL}/uploads/${image.filename}', '${image.title}')">
             </div>
           `;
           imagesContainer.appendChild(imageElement);
@@ -248,6 +272,40 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error loading images:", error);
     }
+  }
+
+  // 全域圖片放大函數
+  window.openImageModal = function(src, title) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const modalCaption = document.getElementById('modalCaption');
+    if (!modal || !modalImg) return;
+
+    modalImg.src = src;
+    modalImg.alt = title || '圖片放大';
+    if (modalCaption) {
+      modalCaption.textContent = title || '圖片分享';
+    }
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  };
+
+  // 關閉 Modal 的事件
+  const modal = document.getElementById('imageModal');
+  if (modal) {
+    const closeBtn = modal.querySelector('.modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      });
+    }
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
   }
 
   loadVideos();
