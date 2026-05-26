@@ -139,8 +139,11 @@ const authenticateAdmin = (req, res, next) => {
     });
 };
 
-// 取得所有用戶 (需要管理員權限)
+// 取得所有用戶 (僅系統主要管理員 Yinch 可進)
 router.get('/users', authenticateAdmin, (req, res) => {
+    if (req.user.username !== 'Yinch') {
+        return res.status(403).send('無此操作權限，只有系統主要管理員 Yinch 才能管理帳號');
+    }
     connection.query('SELECT id, username, role, avatar, created_at FROM users', (err, results) => {
         if (err) {
             console.error(err);
@@ -150,21 +153,35 @@ router.get('/users', authenticateAdmin, (req, res) => {
     });
 });
 
-// 更新用戶角色 (需要管理員權限)
+// 更新用戶角色 (僅系統主要管理員 Yinch 可操作，且禁止更動 Yinch 自身的角色)
 router.put('/users/:id/role', authenticateAdmin, (req, res) => {
     const userId = req.params.id;
     const { role } = req.body;
+
+    if (req.user.username !== 'Yinch') {
+        return res.status(403).send('無此操作權限，只有系統主要管理員 Yinch 才能更新權限');
+    }
 
     if (!['user', 'admin'].includes(role)) {
         return res.status(400).send('無效的角色類型');
     }
 
-    connection.query('UPDATE users SET role = ? WHERE id = ?', [role, userId], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('更新失敗');
+    // 先檢查要被修改的使用者是否是 Yinch 本人
+    connection.query('SELECT username FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) return res.status(500).send('資料庫查詢錯誤');
+        if (results.length === 0) return res.status(404).send('找不到該使用者');
+
+        if (results[0].username === 'Yinch') {
+            return res.status(403).send('禁止更動系統主要管理員 Yinch 的權限');
         }
-        res.send('使用者權限更新成功');
+
+        connection.query('UPDATE users SET role = ? WHERE id = ?', [role, userId], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('更新失敗');
+            }
+            res.send('使用者權限更新成功');
+        });
     });
 });
 

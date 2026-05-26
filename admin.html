@@ -354,7 +354,7 @@
                     navUl.appendChild(avatarLi);
                 }
 
-                if (payload && payload.role === 'admin') {
+                if (payload && payload.username === 'Yinch') {
                     const adminLi = document.createElement('li');
                     adminLi.innerHTML = `<a href="admin.html" class="active">管理後台</a>`;
                     navUl.appendChild(adminLi);
@@ -379,8 +379,8 @@
                 `;
             }
 
-            // 2. 權限認證檢查與資料加載
-            if (!payload || payload.role !== 'admin') {
+            // 2. 權限認證檢查與資料加載 (僅系統主要管理員 Yinch 才能進入管理後台)
+            if (!payload || payload.username !== 'Yinch') {
                 document.getElementById('unauthorized-content').style.display = 'block';
                 return;
             }
