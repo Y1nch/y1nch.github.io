@@ -184,7 +184,8 @@ document.addEventListener("DOMContentLoaded", () => {
           
           let deleteBtnHtml = '';
           if (isAdmin) {
-            deleteBtnHtml = `<button class="delete-btn" style="background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 14px; width: fit-content; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'" onclick="window.deleteVideo(${video.id})">刪除影片</button>`;
+              deleteBtnHtml = `<button class="delete-btn" style="background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 14px; width: fit-content; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'" onclick="window.deleteVideo(${video.id})">刪除影片</button>
+              <button class="delete-account-btn" style="background-color: #7c3aed; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 14px; margin-left: 8px; width: fit-content; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#6d28d9'" onmouseout="this.style.backgroundColor='#7c3aed'" onclick="window.deleteAccount()">刪除帳號</button>`;
           }
 
           videoElement.innerHTML = `
@@ -307,6 +308,33 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // 刪除帳號功能
+  window.deleteAccount = async function() {
+    if (!confirm('確定要刪除您的帳號嗎？此操作將永久刪除所有相關資料且無法復原！')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auth/account`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        alert('帳號已成功刪除！');
+        localStorage.removeItem('token');
+        window.location.href = 'index.html';
+      } else {
+        const err = await response.json();
+        alert(`刪除帳號失敗: ${err.message}`);
+      }
+    } catch (error) {
+      console.error('刪除帳號失敗:', error);
+      alert('刪除帳號失敗，請檢查網路連線。');
+    }
+  };
 
   loadVideos();
   loadImages();

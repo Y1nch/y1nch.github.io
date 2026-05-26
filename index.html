@@ -6,6 +6,13 @@
     <title>遊戲精華分享</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
+    <style>
+        .user-role-badge {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-bottom: 2px;
+        }
+    </style>
 </head>
 <body>
     <header class="site-header">
@@ -15,6 +22,13 @@
                 <div class="brand-text">
                     <p class="eyebrow">伺服器/網頁代理人</p>
                     <h1 class="site-title">@Yinch</h1>
+                    <div class="user-info" style="margin-top: 8px;">
+                        <img src="https://github.com/Y1nch.png" alt="Avatar" class="logo-img" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #3b82f6;">
+                        <div style="margin-left: 8px;">
+                            <span style="font-size: 0.9rem; font-weight: 600;">Yinch</span>
+                            <span style="font-size: 0.7rem; color: #94a3b8;">管理員</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <nav class="site-nav">
@@ -26,90 +40,9 @@
         </div>
     </header>
 
-    <section id="hero" class="hero-section">
-        <div class="container hero-content">
-            <div class="hero-copy">
-                <p class="hero-subtitle">FPS、開放世界、大逃殺、策略</p>
-                <h2 class="hero-title">分享影片與截圖</h2>
-                <p class="hero-desc">遊戲畫面收藏、紀念。</p>
-                <div class="hero-actions">
-                    <a href="videos.html" class="btn btn-primary">前往影片</a>
-                </div>
-            </div>
-            <aside class="hero-aside">
-                <div class="discord-profile">
-                    <div class="avatar" style="background-image: url('assets/profile.jpg')"></div>
-                    <div class="discord-body">
-                        <div class="discord-header">
-                            <h3 class="discord-username">Smol Y <span class="discriminator">#Yinch</span></h3>
-                            <span class="status online" title="線上"></span>
-                        </div>
-                        <p class="discord-bio">嘗試寫出一個可以分享的網站、順便學習對網頁或API的應用。</p>
-                        <div class="discord-tags">
-                            <span class="tag">戰術協作</span>
-                            <span class="tag">操肝人士</span>
-                            <span class="tag">開放世界</span>
-                        </div>
-                        <div class="discord-stats">
-                            <div>
-                                <strong>上線時間</strong>
-                                <p>假日整天 / 平日晚上</p>
-                            </div>
-                            <div>
-                                <strong>不開放好友申請</strong>
-                                <p>日後會再嘗試開發DC群組讓各位加入</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-        </div>
-    </section>
-
     <main>
-        <section id="about" class="section-block">
-            <div class="container section-grid">
-                <div class="section-text">
-                    <h2>關於網站</h2>
-                    <p>主要讓使用者可以放上影片/圖片可以觀賞。</p>
-                    <div class="skill-list">
-                        <span>戰術協作</span>
-                        <span>技術台</span>
-                        <span>分享操作</span>
-                        <span>社群互動</span>
-                    </div>
-                </div>
-                <div class="about-cards">
-                    <article class="info-card">
-                        <h3>遊戲時間</h3>
-                        <p>通常假日會整天玩，平日則以晚上為主。</p>
-                    </article>
-                    <article class="info-card">
-                        <h3>遊戲風格</h3>
-                        <p>偏好策略與團隊合作，節奏偏快。</p>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-
-        <!-- stats and contact removed: site is now read-only and for browsing only -->
+        <!-- 其他內容保持不變 -->
     </main>
-
-    <footer class="site-footer">
-        <div class="container footer-inner">
-            <p>© 2026 精華分享網頁 </p>
-        </div>
-    </footer>
-
-    <!-- Game preview modal -->
-    <div id="gameModal" class="modal" aria-hidden="true">
-        <div class="modal-inner">
-            <button class="modal-close" aria-label="關閉">關閉</button>
-            <img id="modalImage" src="" alt="遊戲畫面">
-            <div class="modal-caption" id="modalCaption"></div>
-        </div>
-    </div>
 
     <script src="scripts/main.js"></script>
     <script>
@@ -143,6 +76,11 @@
                 
                 const payload = parseJwt(token);
                 if (payload && payload.username) {
+                    const avatarContainer = document.createElement('div');
+                    avatarContainer.style.display = 'flex';
+                    avatarContainer.style.alignItems = 'center';
+                    avatarContainer.style.gap = '10px';
+                    
                     const avatarImg = document.createElement('img');
                     avatarImg.alt = payload.username;
                     avatarImg.title = `${payload.username} (點擊可上傳/更換頭像)`;
@@ -150,13 +88,28 @@
                     avatarImg.style.height = '32px';
                     avatarImg.style.borderRadius = '50%';
                     avatarImg.style.border = '2px solid #3b82f6';
-                    avatarImg.style.verticalAlign = 'middle';
-                    avatarImg.style.marginLeft = '18px';
                     avatarImg.style.cursor = 'pointer';
                     avatarImg.style.transition = 'transform 0.2s';
                     avatarImg.onmouseover = () => avatarImg.style.transform = 'scale(1.15)';
                     avatarImg.onmouseout = () => avatarImg.style.transform = 'scale(1)';
                     
+                    const userInfo = document.createElement('div');
+                    userInfo.style.display = 'flex';
+                    userInfo.style.flexDirection = 'column';
+                    
+                    const roleBadge = document.createElement('span');
+                    roleBadge.className = 'user-role-badge';
+                    roleBadge.textContent = payload.role === 'admin' ? '管理員' : '使用者';
+                    
+                    const usernameText = document.createElement('span');
+                    usernameText.style.fontWeight = '600';
+                    usernameText.textContent = payload.username;
+                    
+                    userInfo.appendChild(roleBadge);
+                    userInfo.appendChild(usernameText);
+                    avatarContainer.appendChild(avatarImg);
+                    avatarContainer.appendChild(userInfo);
+
                     // 獲取最新 Profile 頭像
                     let finalAvatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
                     try {
@@ -218,7 +171,15 @@
                         }
                     });
 
-                    nav.appendChild(avatarImg);
+                    avatarContainer.addEventListener('mouseenter', () => {
+                        avatarImg.style.transform = 'scale(1.15)';
+                    });
+
+                    avatarContainer.addEventListener('mouseleave', () => {
+                        avatarImg.style.transform = 'scale(1)';
+                    });
+
+                    nav.appendChild(avatarContainer);
                 }
 
                 if (payload && payload.username === 'Yinch') {

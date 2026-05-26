@@ -428,9 +428,14 @@
                             <td>
                                 ${isMainAdmin 
                                     ? `<em style="color: #64748b; font-size: 0.9rem;">系統主要管理員</em>` 
-                                    : `<button class="action-btn ${user.role === 'admin' ? 'demote' : ''}" onclick="toggleRole(${user.id}, '${user.role}')">
-                                        ${user.role === 'admin' ? '降級為用戶' : '設為管理員'}
-                                       </button>`
+                                    : `<>
+                                        <button class="action-btn ${user.role === 'admin' ? 'demote' : ''}" onclick="toggleRole(${user.id}, '${user.role}')">
+                                            ${user.role === 'admin' ? '降級為用戶' : '設為管理員'}
+                                        </button>
+                                        <button class="action-btn delete-btn" onclick="deleteUser(${user.id})" style="margin-left: 8px; background-color: #ef4444;">
+                                            刪除帳號
+                                        </button>
+                                       </>`
                                 }
                             </td>
                         `;
