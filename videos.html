@@ -272,34 +272,64 @@
     </header>
 
     <main>
-        <section id="upload-video">
-            <h2>上傳新影片</h2>
-            <form id="video-upload-form" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="video-title">影片標題</label>
-                    <input type="text" id="video-title" name="title" placeholder="請輸入影片標題..." required>
-                </div>
-
-                <div class="form-group">
-                    <label for="video-description">影片描述</label>
-                    <textarea id="video-description" name="description" placeholder="請輸入影片的詳細描述..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="video-file">選擇影片檔案</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="video-file" name="video" accept="video/*" required>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 40px;">
+            <section id="upload-video" style="margin-bottom: 0;">
+                <h2>上傳新影片</h2>
+                <form id="video-upload-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="video-title">影片標題</label>
+                        <input type="text" id="video-title" name="title" placeholder="請輸入影片標題..." required>
                     </div>
-                </div>
 
-                <button type="submit">確認上傳影片</button>
-            </form>
+                    <div class="form-group">
+                        <label for="video-description">影片描述</label>
+                        <textarea id="video-description" name="description" placeholder="請輸入影片的詳細描述..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="video-file">選擇影片檔案</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="video-file" name="video" accept="video/*" required>
+                        </div>
+                    </div>
+
+                    <button type="submit">確認上傳影片</button>
+                </form>
+            </section>
+
+            <section id="upload-image" style="background-color: #111827; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);">
+                <h2>上傳新圖片</h2>
+                <form id="image-upload-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="image-title">圖片標題</label>
+                        <input type="text" id="image-title" name="title" placeholder="請輸入圖片標題..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image-description">圖片描述</label>
+                        <textarea id="image-description" name="description" placeholder="請輸入圖片的詳細描述..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image-file">選擇圖片檔案</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="image-file" name="image" accept="image/*" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" style="background-color: #10b981; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s, transform 0.1s; width: 100%; margin-top: 10px;">確認上傳圖片</button>
+                </form>
+            </section>
+        </div>
+
+        <section id="video-list" style="margin-bottom: 40px;">
+            <h2>已上傳影片</h2>
+            <div id="videos-container"></div>
         </section>
 
-        <section id="video-list">
-            <h2>已上傳影片</h2>
-            <div id="videos-container">
-                </div>
+        <section id="image-list">
+            <h2>已上傳圖片</h2>
+            <div id="images-container" style="display: flex; flex-direction: column; gap: 25px; margin-top: 20px;"></div>
         </section>
     </main>
 
@@ -310,9 +340,12 @@
     <script src="scripts/videos.js"></script>
     <script>
         // 登出與狀態切換邏輯
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
             const navUl = document.querySelector('nav ul');
+            const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:3000'
+                : 'https://y1nchgithubio-production.up.railway.app';
             
             function parseJwt(token) {
                 try {
@@ -343,19 +376,76 @@
                 
                 const payload = parseJwt(token);
                 if (payload && payload.username) {
-                    const avatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
                     const avatarLi = document.createElement('li');
                     avatarLi.style.display = 'flex';
                     avatarLi.style.alignItems = 'center';
                     
                     const avatarImg = document.createElement('img');
-                    avatarImg.src = avatarUrl;
                     avatarImg.alt = payload.username;
-                    avatarImg.title = payload.username;
+                    avatarImg.title = `${payload.username} (點擊可上傳/更換頭像)`;
                     avatarImg.style.width = '32px';
                     avatarImg.style.height = '32px';
                     avatarImg.style.borderRadius = '50%';
                     avatarImg.style.border = '2px solid #3b82f6';
+                    avatarImg.style.cursor = 'pointer';
+                    avatarImg.style.transition = 'transform 0.2s';
+                    avatarImg.onmouseover = () => avatarImg.style.transform = 'scale(1.15)';
+                    avatarImg.onmouseout = () => avatarImg.style.transform = 'scale(1)';
+                    
+                    // 獲取最新 Profile 頭像
+                    let finalAvatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
+                    try {
+                        const profileRes = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (profileRes.ok) {
+                            const profileData = await profileRes.json();
+                            if (profileData.avatar) {
+                                finalAvatarUrl = `${BACKEND_URL}/uploads/${profileData.avatar}`;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('獲取頭像失敗，使用預設頭像:', err);
+                    }
+                    avatarImg.src = finalAvatarUrl;
+
+                    // 點擊更換頭像功能
+                    const avatarInput = document.createElement('input');
+                    avatarInput.type = 'file';
+                    avatarInput.accept = 'image/*';
+                    avatarInput.style.display = 'none';
+                    document.body.appendChild(avatarInput);
+
+                    avatarImg.addEventListener('click', () => {
+                        avatarInput.click();
+                    });
+
+                    avatarInput.addEventListener('change', async () => {
+                        if (avatarInput.files.length === 0) return;
+                        const file = avatarInput.files[0];
+                        const formData = new FormData();
+                        formData.append('avatar', file);
+
+                        try {
+                            const uploadRes = await fetch(`${BACKEND_URL}/api/auth/avatar`, {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                                body: formData
+                            });
+
+                            if (uploadRes.ok) {
+                                const uploadData = await uploadRes.json();
+                                alert('頭像上傳成功！');
+                                avatarImg.src = `${BACKEND_URL}/uploads/${uploadData.avatar}`;
+                            } else {
+                                const errMsg = await uploadRes.text();
+                                alert(`更換頭像失敗: ${errMsg}`);
+                            }
+                        } catch (err) {
+                            console.error('更換頭像錯誤:', err);
+                            alert('更換頭像發生錯誤，請稍後再試。');
+                        }
+                    });
                     
                     avatarLi.appendChild(avatarImg);
                     navUl.appendChild(avatarLi);

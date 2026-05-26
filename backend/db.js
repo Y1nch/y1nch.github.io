@@ -23,6 +23,7 @@ connection.connect(err => {
         username VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(50) DEFAULT 'user',
+        avatar VARCHAR(255) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     `;
@@ -33,6 +34,11 @@ connection.connect(err => {
             return;
         }
         console.log('users 表已準備就緒或已存在');
+
+        // 確保 users 表具有 avatar 欄位
+        connection.query("ALTER TABLE users ADD COLUMN avatar VARCHAR(255) DEFAULT NULL", (alterErr) => {
+            // 忽略已存在欄位錯誤
+        });
 
         // 自動建立主要管理員帳號 Yinch / bede0221
         const bcrypt = require('bcryptjs');

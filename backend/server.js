@@ -45,6 +45,7 @@ const createTableSql = `
     title VARCHAR(255) NOT NULL,
     description TEXT,
     filename VARCHAR(255) NOT NULL,
+    uploader VARCHAR(255) DEFAULT 'Yinch',
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `;
@@ -54,7 +55,26 @@ db.query(createTableSql, (err, result) => {
     console.error('MySQL 初始檢查失敗（若資料庫仍在啟動中請稍候）：', err.message);
   } else {
     console.log('Connected to MySQL database & Videos table checked/created.');
+    // 確保 videos 表具有 uploader 欄位
+    db.query("ALTER TABLE videos ADD COLUMN uploader VARCHAR(255) DEFAULT 'Yinch'", (alterErr) => {
+      // 忽略已存在欄位錯誤
+    });
   }
+});
+
+// 建立 images 表
+const createImagesTableSql = `
+  CREATE TABLE IF NOT EXISTS images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    filename VARCHAR(255) NOT NULL,
+    uploader VARCHAR(255) DEFAULT 'Yinch',
+    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+db.query(createImagesTableSql, (err) => {
+  if (err) console.error('建立 images 資料表失敗:', err.message);
 });
 
 // Configure Multer for file uploads
@@ -69,6 +89,25 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
+// 解析選填認證 token 的中間件
+const getOptionalUser = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (!err) {
+        req.user = decoded;
+      }
+      next();
+    });
+  } else {
+    next();
+  }
+};
+
 // ===== API Endpoints =====
 
 app.get('/', (req, res) => {
@@ -76,21 +115,54 @@ app.get('/', (req, res) => {
 });
 
 // Upload Video
-app.post('/api/videos/upload', upload.single('video'), (req, res) => {
+app.post('/api/videos/upload', getOptionalUser, upload.single('video'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No video file uploaded' });
   }
 
   const { title, description } = req.body;
   const filename = req.file.filename;
+  const uploader = req.user ? req.user.username : '訪客';
 
-  const insertSql = 'INSERT INTO videos (title, description, filename) VALUES (?, ?, ?)';
-  db.query(insertSql, [title, description, filename], (err, result) => {
+  const insertSql = 'INSERT INTO videos (title, description, filename, uploader) VALUES (?, ?, ?, ?)';
+  db.query(insertSql, [title, description, filename, uploader], (err, result) => {
     if (err) {
       console.error('Error inserting video into database:', err);
       return res.status(500).json({ message: 'Error uploading video' });
     }
     res.status(201).json({ message: 'Video uploaded successfully', videoId: result.insertId });
+  });
+});
+
+// Upload Image
+app.post('/api/images/upload', getOptionalUser, upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No image file uploaded' });
+  }
+
+  const { title, description } = req.body;
+  const filename = req.file.filename;
+  const uploader = req.user ? req.user.username : '訪客';
+
+  const insertSql = 'INSERT INTO images (title, description, filename, uploader) VALUES (?, ?, ?, ?)';
+  db.query(insertSql, [title, description, filename, uploader], (err, result) => {
+    if (err) {
+      console.error('Error inserting image into database:', err);
+      return res.status(500).json({ message: 'Error uploading image' });
+    }
+    res.status(201).json({ message: 'Image uploaded successfully', imageId: result.insertId });
+  });
+});
+
+// Get all images
+app.get('/api/images', (req, res) => {
+  const selectSql = 'SELECT * FROM images ORDER BY upload_date DESC';
+  db.query(selectSql, (err, results) => {
+    if (err) {
+      console.error('Error fetching images:', err);
+      return res.status(500).json({ message: 'Error fetching images' });
+    }
+    res.status(200).json(results);
   });
 });
 
@@ -105,9 +177,6 @@ app.get('/api/videos', (req, res) => {
     res.status(200).json(results);
   });
 });
-
-const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 // 管理員認證中間件
 const authenticateAdmin = (req, res, next) => {
@@ -157,6 +226,40 @@ app.delete('/api/videos/:id', authenticateAdmin, (req, res) => {
           // 雖然檔案刪除失敗，但資料庫已刪，故仍返回成功
         }
         res.status(200).json({ message: '影片刪除成功' });
+      });
+    });
+  });
+});
+
+// 刪除圖片 API (需要管理員權限)
+app.delete('/api/images/:id', authenticateAdmin, (req, res) => {
+  const imageId = req.params.id;
+
+  const selectSql = 'SELECT filename FROM images WHERE id = ?';
+  db.query(selectSql, [imageId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: '資料庫查詢錯誤' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ message: '找不到此圖片' });
+    }
+
+    const filename = results[0].filename;
+    const filePath = path.join(uploadDir, filename);
+
+    const deleteSql = 'DELETE FROM images WHERE id = ?';
+    db.query(deleteSql, [imageId], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: '刪除圖片記錄失敗' });
+      }
+
+      fs.unlink(filePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error('刪除實體圖片失敗:', unlinkErr);
+        }
+        res.status(200).json({ message: '圖片刪除成功' });
       });
     });
   });

@@ -1,10 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
   const videoUploadForm = document.getElementById("video-upload-form");
+  const imageUploadForm = document.getElementById("image-upload-form");
   const videosContainer = document.getElementById("videos-container");
+  const imagesContainer = document.getElementById("images-container");
 
-  // ⭐ Railway 雲端公網網址
-  const BACKEND_URL = "https://y1nchgithubio-production.up.railway.app"; 
+  // ⭐ 動態適應本地與 Railway 雲端公網網址
+  const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000'
+    : 'https://y1nchgithubio-production.up.railway.app';
 
+  // 影片上傳處理
   if (videoUploadForm) {
     videoUploadForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -14,9 +19,16 @@ document.addEventListener("DOMContentLoaded", () => {
       formData.append("description", document.getElementById("video-description").value);
       formData.append("video", document.getElementById("video-file").files[0]);
 
+      const token = localStorage.getItem('token');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       try {
         const response = await fetch(`${BACKEND_URL}/api/videos/upload`, {
           method: "POST",
+          headers: headers,
           body: formData,
         });
 
@@ -30,7 +42,45 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (error) {
         console.error("Error:", error);
-        alert("連線失敗，請檢查網路或後端狀態。 (An error occurred during video upload.)");
+        alert("連線失敗，請檢查網路或後端狀態。");
+      }
+    });
+  }
+
+  // 圖片上傳處理
+  if (imageUploadForm) {
+    imageUploadForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData();
+      formData.append("title", document.getElementById("image-title").value);
+      formData.append("description", document.getElementById("image-description").value);
+      formData.append("image", document.getElementById("image-file").files[0]);
+
+      const token = localStorage.getItem('token');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/images/upload`, {
+          method: "POST",
+          headers: headers,
+          body: formData,
+        });
+
+        if (response.ok) {
+          alert("圖片上傳成功！ (Image uploaded successfully!)");
+          imageUploadForm.reset();
+          loadImages();
+        } else {
+          const errorData = await response.json();
+          alert(`上傳失敗: ${errorData.message}`);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("連線失敗，請檢查網路或後端狀態。");
       }
     });
   }
@@ -74,6 +124,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // 建立全域刪除圖片函數
+  window.deleteImage = async function(imageId) {
+    if (!confirm('確定要刪除這張圖片嗎？此操作無法復原。')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/images/${imageId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        alert('圖片刪除成功！');
+        loadImages();
+      } else {
+        const err = await response.json();
+        alert(`刪除失敗: ${err.message}`);
+      }
+    } catch (error) {
+      console.error('刪除圖片失敗:', error);
+      alert('刪除失敗，請檢查網路連線。');
+    }
+  };
+
   async function loadVideos() {
     try {
       const response = await fetch(`${BACKEND_URL}/api/videos`);
@@ -92,8 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         videos.forEach((video) => {
           const videoElement = document.createElement("div");
-          
-          // ⭕ 1. 改為對應 HTML 裡全新設計的科技藍微光外框 Class
           videoElement.classList.add("video-card");
           
           let deleteBtnHtml = '';
@@ -101,14 +175,13 @@ document.addEventListener("DOMContentLoaded", () => {
             deleteBtnHtml = `<button class="delete-btn" style="background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 14px; width: fit-content; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'" onclick="window.deleteVideo(${video.id})">刪除影片</button>`;
           }
 
-          // ⭕ 2. 完美的結構填充：左側放文字區（video-info）、右側放安全播放器（video-player-wrapper）
-          // 這樣影片控制條就會被死死鎖在框框內，絕對不會再爆出去了！
           videoElement.innerHTML = `
             <div class="video-info">
               <h3 class="video-card-title">${video.title}</h3>
               <p class="video-card-desc">${video.description || '暫無描述。'}</p>
-              <span class="video-card-time">
-                上傳時間: ${new Date(video.upload_date).toLocaleString()}
+              <span class="video-card-time" style="display: flex; flex-direction: column; gap: 4px; color: #64748b;">
+                <span>上傳者: <strong style="color: #3b82f6;">${video.uploader || '訪客'}</strong></span>
+                <span>上傳時間: ${new Date(video.upload_date).toLocaleString()}</span>
               </span>
               ${deleteBtnHtml}
             </div>
@@ -129,5 +202,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function loadImages() {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/images`);
+      if (response.ok) {
+        const images = await response.json();
+        imagesContainer.innerHTML = "";
+        
+        if (images.length === 0) {
+          imagesContainer.innerHTML = "<p style='color: #64748b; text-align: center; margin-top: 20px;'>目前還沒有任何圖片，快來上傳一張吧！</p>";
+          return;
+        }
+
+        const token = localStorage.getItem('token');
+        const payload = token ? parseJwt(token) : null;
+        const isAdmin = payload && payload.role === 'admin';
+
+        images.forEach((image) => {
+          const imageElement = document.createElement("div");
+          imageElement.classList.add("video-card"); // 使用相同的微光科技外框類別
+
+          let deleteBtnHtml = '';
+          if (isAdmin) {
+            deleteBtnHtml = `<button class="delete-btn" style="background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 14px; width: fit-content; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'" onclick="window.deleteImage(${image.id})">刪除圖片</button>`;
+          }
+
+          imageElement.innerHTML = `
+            <div class="video-info">
+              <h3 class="video-card-title">${image.title}</h3>
+              <p class="video-card-desc">${image.description || '暫無描述。'}</p>
+              <span class="video-card-time" style="display: flex; flex-direction: column; gap: 4px; color: #64748b;">
+                <span>上傳者: <strong style="color: #10b981;">${image.uploader || '訪客'}</strong></span>
+                <span>上傳時間: ${new Date(image.upload_date).toLocaleString()}</span>
+              </span>
+              ${deleteBtnHtml}
+            </div>
+            <div class="video-player-wrapper" style="background-color: transparent;">
+              <img src="${BACKEND_URL}/uploads/${image.filename}" alt="${image.title}" style="width: 100%; height: auto; border-radius: 8px; display: block; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+            </div>
+          `;
+          imagesContainer.appendChild(imageElement);
+        });
+      } else {
+        console.error("Failed to load images:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error loading images:", error);
+    }
+  }
+
   loadVideos();
+  loadImages();
 });

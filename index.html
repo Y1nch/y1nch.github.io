@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yinch介紹頁</title>
+    <title>遊戲精華分享</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
 </head>
@@ -13,7 +13,7 @@
             <div class="brand">
                 <img src="assets/profile.jpg" alt="Yinch" class="logo-img">
                 <div class="brand-text">
-                    <p class="eyebrow">只是個人</p>
+                    <p class="eyebrow">伺服器/網頁代理人</p>
                     <h1 class="site-title">@Yinch</h1>
                 </div>
             </div>
@@ -30,11 +30,11 @@
     <section id="hero" class="hero-section">
         <div class="container hero-content">
             <div class="hero-copy">
-                <p class="hero-subtitle">FPS、開放世界</p>
-                <h2 class="hero-title">關於我遊玩的遊戲</h2>
+                <p class="hero-subtitle">FPS、開放世界、大逃殺、策略</p>
+                <h2 class="hero-title">分享影片與截圖</h2>
                 <p class="hero-desc">遊戲畫面收藏、紀念。</p>
                 <div class="hero-actions">
-                    <a href="#games" class="btn btn-primary">我的收藏</a>
+                    <a href="#games" class="btn btn-primary">遊戲列表</a>
                     <a href="videos.html" class="btn btn-secondary">最近影片</a>
                 </div>
             </div>
@@ -127,9 +127,12 @@
     <script src="scripts/main.js"></script>
     <script>
         // 登出與狀態切換邏輯
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
             const nav = document.querySelector('.site-nav');
+            const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:3000'
+                : 'https://y1nchgithubio-production.up.railway.app';
             
             function parseJwt(token) {
                 try {
@@ -153,17 +156,75 @@
                 
                 const payload = parseJwt(token);
                 if (payload && payload.username) {
-                    const avatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
                     const avatarImg = document.createElement('img');
-                    avatarImg.src = avatarUrl;
                     avatarImg.alt = payload.username;
-                    avatarImg.title = payload.username;
+                    avatarImg.title = `${payload.username} (點擊可上傳/更換頭像)`;
                     avatarImg.style.width = '32px';
                     avatarImg.style.height = '32px';
                     avatarImg.style.borderRadius = '50%';
                     avatarImg.style.border = '2px solid #3b82f6';
                     avatarImg.style.verticalAlign = 'middle';
                     avatarImg.style.marginLeft = '18px';
+                    avatarImg.style.cursor = 'pointer';
+                    avatarImg.style.transition = 'transform 0.2s';
+                    avatarImg.onmouseover = () => avatarImg.style.transform = 'scale(1.15)';
+                    avatarImg.onmouseout = () => avatarImg.style.transform = 'scale(1)';
+                    
+                    // 獲取最新 Profile 頭像
+                    let finalAvatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
+                    try {
+                        const profileRes = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (profileRes.ok) {
+                            const profileData = await profileRes.json();
+                            if (profileData.avatar) {
+                                finalAvatarUrl = `${BACKEND_URL}/uploads/${profileData.avatar}`;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('獲取頭像失敗，使用預設頭像:', err);
+                    }
+                    avatarImg.src = finalAvatarUrl;
+
+                    // 點擊更換頭像功能
+                    const avatarInput = document.createElement('input');
+                    avatarInput.type = 'file';
+                    avatarInput.accept = 'image/*';
+                    avatarInput.style.display = 'none';
+                    document.body.appendChild(avatarInput);
+
+                    avatarImg.addEventListener('click', () => {
+                        avatarInput.click();
+                    });
+
+                    avatarInput.addEventListener('change', async () => {
+                        if (avatarInput.files.length === 0) return;
+                        const file = avatarInput.files[0];
+                        const formData = new FormData();
+                        formData.append('avatar', file);
+
+                        try {
+                            const uploadRes = await fetch(`${BACKEND_URL}/api/auth/avatar`, {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                                body: formData
+                            });
+
+                            if (uploadRes.ok) {
+                                const uploadData = await uploadRes.json();
+                                alert('頭像上傳成功！');
+                                avatarImg.src = `${BACKEND_URL}/uploads/${uploadData.avatar}`;
+                            } else {
+                                const errMsg = await uploadRes.text();
+                                alert(`更換頭像失敗: ${errMsg}`);
+                            }
+                        } catch (err) {
+                            console.error('更換頭像錯誤:', err);
+                            alert('更換頭像發生錯誤，請稍後再試。');
+                        }
+                    });
+
                     nav.appendChild(avatarImg);
                 }
 

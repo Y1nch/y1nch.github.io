@@ -2,10 +2,30 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const connection = require('./db'); // 確保db.js文件存在並正確導出連接
+const connection = require('./db');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret'; // 從環境變量獲取或使用默認值
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
+// 頭像檔案上傳設定
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, 'avatar-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // 註冊路由
 router.post('/register', async (req, res) => {
@@ -145,6 +165,48 @@ router.put('/users/:id/role', authenticateAdmin, (req, res) => {
             return res.status(500).send('更新失敗');
         }
         res.send('使用者權限更新成功');
+    });
+});
+
+// 取得當前使用者 Profile (需要登入)
+router.get('/profile', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).send('未提供認證 token');
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).send('token 無效或已過期');
+        
+        connection.query('SELECT username, role, avatar FROM users WHERE id = ?', [decoded.id], (dbErr, results) => {
+            if (dbErr || results.length === 0) {
+                return res.status(504).send('資料庫查詢失敗或用戶不存在');
+            }
+            res.json(results[0]);
+        });
+    });
+});
+
+// 上傳並更新頭像 (需要登入)
+router.post('/avatar', upload.single('avatar'), (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).send('未提供認證 token');
+    if (!req.file) return res.status(400).send('未選擇頭像檔案');
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).send('token 無效或已過期');
+        
+        const avatarFilename = req.file.filename;
+
+        connection.query('UPDATE users SET avatar = ? WHERE id = ?', [avatarFilename, decoded.id], (dbErr) => {
+            if (dbErr) {
+                console.error(dbErr);
+                return res.status(500).send('更新頭像失敗');
+            }
+            res.json({ message: '頭像更新成功', avatar: avatarFilename });
+        });
     });
 });
 
