@@ -3,6 +3,7 @@ const mysql = require('mysql');
 const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,55 +12,59 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// MySQL Connection Pool
+// 確保 uploads 資料夾在伺服器啟動時一定存在
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// MySQL Connection Pool (安全支援本地環境與 Railway 雲端環境)
 const db = mysql.createPool({
   connectionLimit: 10,
   host: process.env.MYSQL_HOST || 'localhost',
   user: process.env.MYSQL_USER || 'root',
   password: process.env.MYSQL_PASSWORD || 'password',
-  database: process.env.MYSQL_DATABASE || 'yinch_db'
+  database: process.env.MYSQL_DATABASE || 'yinch_db',
+  port: process.env.MYSQL_PORT || 3306
 });
 
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error('Error connecting to MySQL:', err);
-    return;
-  }
-  console.log('Connected to MySQL database!');
-  connection.release();
+// 自動檢查並建立資料表（改用 Pool 直接查詢，避免一開機連不上就崩潰）
+const createTableSql = `
+  CREATE TABLE IF NOT EXISTS videos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    filename VARCHAR(255) NOT NULL,
+    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`;
 
-  // Create videos table if it doesn't exist
-  const createTableSql = `
-    CREATE TABLE IF NOT EXISTS videos (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title VARCHAR(255) NOT NULL,
-      description TEXT,
-      filename VARCHAR(255) NOT NULL,
-      upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-  db.query(createTableSql, (err, result) => {
-    if (err) {
-      console.error('Error creating videos table:', err);
-      return;
-    }
-    console.log('Videos table checked/created.');
-  });
+db.query(createTableSql, (err, result) => {
+  if (err) {
+    console.error('MySQL 初始檢查失敗（若資料庫仍在啟動中請稍候）：', err.message);
+  } else {
+    console.log('Connected to MySQL database & Videos table checked/created.');
+  }
 });
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Videos will be stored in the 'uploads' directory
+    cb(null, uploadDir); // 確保指向絕對路徑的 uploads 資料夾
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
+    cb(null, Date.now() + path.extname(file.originalname)); // 唯一的隨機檔名
   }
 });
 
 const upload = multer({ storage: storage });
 
-// API Endpoints
+// ===== API Endpoints =====
+
+// 測試用根路由：讓你連上 Railway 網址時可以一眼確認伺服器活著
+app.get('/', (req, res) => {
+  res.send('🚀 Yinch 後端伺服器成功啟動！');
+});
 
 // Upload Video
 app.post('/api/videos/upload', upload.single('video'), (req, res) => {
@@ -92,8 +97,8 @@ app.get('/api/videos', (req, res) => {
   });
 });
 
-// Serve uploaded videos (create 'uploads' directory if it doesn't exist)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve uploaded videos
+app.use('/uploads', express.static(uploadDir));
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
