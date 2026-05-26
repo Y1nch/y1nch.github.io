@@ -19,14 +19,14 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// ⭕ MySQL Connection Pool (修正為 Railway 官方標準變數名稱：拿掉底線)
+// ⭕ 同時支援有底線與無底線的 Railway 環境變數，防護力點滿！
 const db = mysql.createPool({
   connectionLimit: 10,
-  host: process.env.MYSQLHOST || '127.0.0.1',       // 修正：MYSQL_HOST -> MYSQLHOST
-  user: process.env.MYSQLUSER || 'root',             // 修正：MYSQL_USER -> MYSQLUSER
-  password: process.env.MYSQLPASSWORD || 'password', // 修正：MYSQL_PASSWORD -> MYSQLPASSWORD
-  database: process.env.MYSQLDATABASE || 'yinch_db', // 修正：MYSQL_DATABASE -> MYSQLDATABASE
-  port: process.env.MYSQLPORT || 3306                // 修正：MYSQL_PORT -> MYSQLPORT
+  host: process.env.MYSQL_HOST || process.env.MYSQLHOST || '127.0.0.1',
+  user: process.env.MYSQL_USER || process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQL_PASSWORD || process.env.MYSQLPASSWORD || 'password',
+  database: process.env.MYSQL_DATABASE || process.env.MYSQLDATABASE || 'yinch_db',
+  port: process.env.MYSQL_PORT || process.env.MYSQLPORT || 3306
 });
 
 // 自動檢查並建立資料表
