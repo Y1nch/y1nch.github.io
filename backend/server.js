@@ -19,15 +19,16 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// ⭕ 同時支援有底線與無底線的 Railway 環境變數，防護力點滿！
+// ⭕ 這是 Railway 官方最標準的無底線變數讀取方式
 const db = mysql.createPool({
   connectionLimit: 10,
-  host: process.env.MYSQL_HOST || process.env.MYSQLHOST || '127.0.0.1',
-  user: process.env.MYSQL_USER || process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQL_PASSWORD || process.env.MYSQLPASSWORD || 'password',
-  database: process.env.MYSQL_DATABASE || process.env.MYSQLDATABASE || 'yinch_db',
-  port: process.env.MYSQL_PORT || process.env.MYSQLPORT || 3306
+  host: process.env.MYSQLHOST || '127.0.0.1',
+  user: process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQLPASSWORD || 'password',
+  database: process.env.MYSQLDATABASE || 'yinch_db',
+  port: process.env.MYSQLPORT ? parseInt(process.env.MYSQLPORT) : 3306
 });
+
 
 // 自動檢查並建立資料表
 const createTableSql = `
