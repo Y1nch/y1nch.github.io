@@ -125,5 +125,32 @@
     </div>
 
     <script src="scripts/main.js"></script>
+    <script>
+        // 登出與狀態切換邏輯
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const nav = document.querySelector('.site-nav');
+            
+            if (token && nav) {
+                // 已登入：移除「登入」「註冊」，並加入「登出」按鈕
+                const loginBtn = nav.querySelector('a[href="login.html"]');
+                const registerBtn = nav.querySelector('a[href="register.html"]');
+                if (loginBtn) loginBtn.remove();
+                if (registerBtn) registerBtn.remove();
+                
+                const logoutBtn = document.createElement('a');
+                logoutBtn.href = '#';
+                logoutBtn.className = 'nav-auth-btn';
+                logoutBtn.textContent = '登出';
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    alert('已成功登出！');
+                    window.location.reload();
+                });
+                nav.appendChild(logoutBtn);
+            }
+        });
+    </script>
 </body>
 </html>

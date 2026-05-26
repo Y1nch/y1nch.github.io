@@ -1,11 +1,12 @@
 
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
 const connection = mysql.createConnection({
-    host: process.env.MYSQLHOST || 'localhost',
+    host: process.env.MYSQLHOST || '127.0.0.1',
     user: process.env.MYSQLUSER || 'root',
-    password: process.env.MYSQLPASSWORD || '',
-    database: process.env.MYSQLDATABASE || 'yinch_db' // 請替換為您的數據庫名稱
+    password: process.env.MYSQLPASSWORD || 'password',
+    database: process.env.MYSQLDATABASE || 'yinch_db',
+    port: process.env.MYSQLPORT ? parseInt(process.env.MYSQLPORT) : 3306
 });
 
 connection.connect(err => {

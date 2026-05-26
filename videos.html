@@ -308,5 +308,40 @@
     </footer>
 
     <script src="scripts/videos.js"></script>
+    <script>
+        // 登出與狀態切換邏輯
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const navUl = document.querySelector('nav ul');
+            
+            if (token && navUl) {
+                // 已登入：移除「登入」「註冊」，並加入「登出」按鈕
+                const loginLink = navUl.querySelector('a[href="login.html"]');
+                const registerLink = navUl.querySelector('a[href="register.html"]');
+                
+                if (loginLink) {
+                    const loginLi = loginLink.closest('li');
+                    if (loginLi) loginLi.remove();
+                }
+                if (registerLink) {
+                    const registerLi = registerLink.closest('li');
+                    if (registerLi) registerLi.remove();
+                }
+                
+                const logoutLi = document.createElement('li');
+                const logoutBtn = document.createElement('a');
+                logoutBtn.href = '#';
+                logoutBtn.textContent = '登出';
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    alert('已成功登出！');
+                    window.location.reload();
+                });
+                logoutLi.appendChild(logoutBtn);
+                navUl.appendChild(logoutLi);
+            }
+        });
+    </script>
 </body>
 </html>
