@@ -36,7 +36,8 @@
             const password = document.getElementById('password').value;
 
             try {
-                const response = await fetch('http://localhost:3000/api/auth/login', {
+                // 自動使用相對路徑，或是改用您 Railway 部署的 API URL（如果 GitHub Pages 與 API 不同網域）
+                const response = await fetch('https://your-railway-backend-url.up.railway.app/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
