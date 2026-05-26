@@ -2,8 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const videoUploadForm = document.getElementById("video-upload-form");
   const videosContainer = document.getElementById("videos-container");
 
-  // Replace with your Railway backend URL
-  const BACKEND_URL = "YOUR_RAILWAY_BACKEND_URL"; 
+  // ⭐ 已經成功幫你換成 Railway 的雲端公網網址！
+  const BACKEND_URL = "https://y1nchgithubio-production.up.railway.app"; 
 
   if (videoUploadForm) {
     videoUploadForm.addEventListener("submit", async (event) => {
@@ -21,16 +21,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (response.ok) {
-          alert("Video uploaded successfully!");
+          alert("影片上傳成功！ (Video uploaded successfully!)");
           videoUploadForm.reset();
           loadVideos();
         } else {
           const errorData = await response.json();
-          alert(`Error uploading video: ${errorData.message}`);
+          alert(`上傳失敗: ${errorData.message}`);
         }
       } catch (error) {
         console.error("Error:", error);
-        alert("An error occurred during video upload.");
+        alert("連線失敗，請檢查網路或後端狀態。 (An error occurred during video upload.)");
       }
     });
   }
@@ -41,18 +41,34 @@ document.addEventListener("DOMContentLoaded", () => {
       if (response.ok) {
         const videos = await response.json();
         videosContainer.innerHTML = "";
+        
+        if (videos.length === 0) {
+          videosContainer.innerHTML = "<p style='color: #64748b;'>目前還沒有任何影片，快來上傳一個吧！</p>";
+          return;
+        }
+
         videos.forEach((video) => {
           const videoElement = document.createElement("div");
           videoElement.classList.add("video-item");
+          
+          // 加上一些簡單精緻的 CSS 陰影樣式
+          videoElement.style.backgroundColor = "#1e293b";
+          videoElement.style.padding = "20px";
+          videoElement.style.borderRadius = "8px";
+          videoElement.style.marginBottom = "20px";
+          videoElement.style.border = "1px solid #334155";
+
           videoElement.innerHTML = `
-                        <h3>${video.title}</h3>
-                        <p>${video.description}</p>
-                        <video controls width="300">
-                            <source src="${BACKEND_URL}/uploads/${video.filename}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        <p>Uploaded: ${new Date(video.upload_date).toLocaleDateString()}</p>
-                    `;
+            <h3 style="margin-top:0; color:#ffffff;">${video.title}</h3>
+            <p style="color:#cbd5e1; font-size:0.95rem;">${video.description || '無描述'}</p>
+            <video controls width="100%" style="border-radius:6px; background:#0f172a;">
+              <source src="${BACKEND_URL}/uploads/${video.filename}" type="video/mp4">
+              您的瀏覽器不支援此影片標籤。
+            </video>
+            <p style="color:#64748b; font-size:0.85rem; margin-bottom:0; margin-top:10px;">
+              上傳時間: ${new Date(video.upload_date).toLocaleString()}
+            </p>
+          `;
           videosContainer.appendChild(videoElement);
         });
       } else {
