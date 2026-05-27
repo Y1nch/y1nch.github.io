@@ -4,93 +4,278 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>影片圖像分享</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
     <style>
-        /* 保持原有樣式不變 */
         .user-role-badge {
             font-size: 0.7rem;
             color: #94a3b8;
             margin-bottom: 2px;
         }
+        /* 滾動時隱藏使用者細節，切換成創作者名片 */
+        .site-header.scrolled #brandTextZone {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        /* ✨ 影片上傳與展示區域的專屬精美樣式 */
+        .video-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .upload-section {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .upload-section h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #ffffff;
+            font-size: 1.5rem;
+        }
+
+        .upload-type-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #3b82f6;
+            color: #ffffff;
+            border-color: #3b82f6;
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 10px;
+            color: #ffffff;
+            font-family: inherit;
+        }
+
+        .upload-btn {
+            background: #3b82f6;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .upload-btn:hover {
+            background: #2563eb;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
     </style>
 </head>
 <body>
-    <!-- 保持原有HTML結構不變 -->
+    <header class="site-header" id="siteHeader">
+        <div class="container header-inner">
+            <div class="brand" id="headerBrand">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" alt="Logo" class="logo-avatar" id="mainLogoImg" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                <div class="brand-text" id="brandTextZone" style="margin-left: 12px;">
+                    <p class="user-role-badge" style="margin: 0;">歡迎光臨</p>
+                    <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">訪客</h1>
+                </div>
+            </div>
+            <nav class="site-nav">
+                <ul id="navLinksList">
+                    <li><a href="index.html">首頁</a></li>
+                    <li><a href="videos.html" class="active">影片</a></li>
+                    <li><a href="login.html" id="navLoginBtn">登入</a></li>
+                    <li><a href="register.html" id="navRegisterBtn">註冊</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="video-container">
+        <section class="upload-section" id="uploadSection" style="display: none;">
+            <h2>上傳全新遊戲精華</h2>
+            <div class="upload-type-tabs">
+                <button type="button" class="tab-btn active" id="tabVideo" onclick="switchUploadType('video')">🎬 影片上傳</button>
+                <button type="button" class="tab-btn" id="tabImage" onclick="switchUploadType('image')">🖼️ 圖片上傳</button>
+            </div>
+            <form class="upload-form" id="mediaUploadForm">
+                <input type="hidden" id="uploadType" value="video">
+                <div class="form-group">
+                    <label id="titleLabel" for="mediaTitle">影片標題</label>
+                    <input type="text" id="mediaTitle" placeholder="請輸入吸睛的影片標題..." required>
+                </div>
+                <div class="form-group">
+                    <label id="fileLabel" for="mediaFile">選擇影片檔案</label>
+                    <input type="file" id="mediaFile" accept="video/*" required>
+                </div>
+                <button type="submit" class="upload-btn" id="submitBtn">開始上傳影片</button>
+            </form>
+        </section>
+
+        <section style="margin-bottom: 20px;">
+            <h2 style="color: #ffffff; font-size: 1.8rem; margin-bottom: 20px;">熱門精華影片</h2>
+            <div class="video-grid" id="videoGrid">
+                <div style="color: #94a3b8; grid-column: 1/-1; text-align: center; padding: 40px;">
+                    影片載入中，請稍候...
+                </div>
+            </div>
+        </section>
+    </main>
 
     <script src="scripts/videos.js"></script>
     <script>
+        function switchUploadType(type) {
+            const uploadTypeInput = document.getElementById('uploadType');
+            const tabVideo = document.getElementById('tabVideo');
+            const tabImage = document.getElementById('tabImage');
+            const titleLabel = document.getElementById('titleLabel');
+            const mediaTitle = document.getElementById('mediaTitle');
+            const fileLabel = document.getElementById('fileLabel');
+            const mediaFile = document.getElementById('mediaFile');
+            const submitBtn = document.getElementById('submitBtn');
+
+            uploadTypeInput.value = type;
+            mediaFile.value = '';
+
+            if (type === 'video') {
+                tabVideo.classList.add('active');
+                tabImage.classList.remove('active');
+                titleLabel.textContent = '影片標題';
+                mediaTitle.placeholder = '請輸入吸睛的影片標題...';
+                fileLabel.textContent = '選擇影片檔案';
+                mediaFile.accept = 'video/*';
+                submitBtn.textContent = '開始上傳影片';
+            } else {
+                tabImage.classList.add('active');
+                tabVideo.classList.remove('active');
+                titleLabel.textContent = '圖片名稱 / 描述';
+                mediaTitle.placeholder = '請輸入圖片名稱或精彩敘述...';
+                fileLabel.textContent = '選擇圖片檔案';
+                mediaFile.accept = 'image/*';
+                submitBtn.textContent = '開始上傳圖片';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
-            const navUl = document.querySelector('nav ul');
+            const navUl = document.getElementById('navLinksList');
+            const siteHeader = document.getElementById('siteHeader');
+            const mainLogoImg = document.getElementById('mainLogoImg');
+            const brandTextZone = document.getElementById('brandTextZone');
+            
             const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                 ? 'http://localhost:3000'
                 : 'https://y1nchgithubio-production.up.railway.app';
             
+            let isUserLoggedIn = false;
+            let userData = { username: '訪客', role: 'guest', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest' };
+
             function parseJwt(token) {
                 try {
                     const base64Url = token.split('.')[1];
                     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
+                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
                     return JSON.parse(jsonPayload);
-                } catch (e) {
-                    return null;
+                } catch (e) { return null; }
+            }
+
+            // 滾動偵測
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    siteHeader.classList.add('scrolled');
+                    mainLogoImg.src = "assets/profile.jpg";
+                    brandTextZone.innerHTML = `
+                        <p class="user-role-badge" style="margin: 0;">網頁創作者</p>
+                        <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">Yinch</h1>
+                    `;
+                } else {
+                    siteHeader.classList.remove('scrolled');
+                    renderBrandZone();
+                }
+            });
+
+            function renderBrandZone() {
+                mainLogoImg.src = userData.avatar;
+                if (isUserLoggedIn) {
+                    const userRoleText = userData.username === 'Yinch' ? '伺服器/網頁代理' : (userData.role === 'admin' ? '管理員' : '使用者');
+                    brandTextZone.innerHTML = `
+                        <p class="user-role-badge" style="margin: 0;">${userRoleText}</p>
+                        <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">@${userData.username}</h1>
+                    `;
+                    mainLogoImg.style.border = '2px solid #3b82f6';
+                    mainLogoImg.style.cursor = 'pointer';
+                } else {
+                    brandTextZone.innerHTML = `
+                        <p class="user-role-badge" style="margin: 0;">歡迎光臨</p>
+                        <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">訪客</h1>
+                    `;
+                    mainLogoImg.style.border = 'none';
+                    mainLogoImg.style.cursor = 'default';
                 }
             }
 
             if (token && navUl) {
-                // 處理登入狀態
-                const loginLink = navUl.querySelector('a[href="login.html"]');
-                const registerLink = navUl.querySelector('a[href="register.html"]');
-                
-                if (loginLink) {
-                    const loginLi = loginLink.closest('li');
-                    if (loginLi) loginLi.remove();
-                }
-                if (registerLink) {
-                    const registerLi = registerLink.closest('li');
-                    if (registerLi) registerLi.remove();
-                }
+                const loginBtn = document.getElementById('navLoginBtn');
+                const registerBtn = document.getElementById('navRegisterBtn');
+                if (loginBtn) loginBtn.closest('li').remove();
+                if (registerBtn) registerBtn.closest('li').remove();
                 
                 const payload = parseJwt(token);
                 if (payload && payload.username) {
-                    const avatarContainer = document.createElement('div');
-                    avatarContainer.style.display = 'flex';
-                    avatarContainer.style.alignItems = 'center';
-                    avatarContainer.style.gap = '10px';
-                    
-                    const avatarImg = document.createElement('img');
-                    avatarImg.alt = payload.username;
-                    avatarImg.title = `${payload.username} (點擊可上傳/更換頭像)`;
-                    avatarImg.style.width = '32px';
-                    avatarImg.style.height = '32px';
-                    avatarImg.style.borderRadius = '50%';
-                    avatarImg.style.border = '2px solid #3b82f6';
-                    avatarImg.style.cursor = 'pointer';
-                    avatarImg.style.transition = 'transform 0.2s';
-                    avatarImg.onmouseover = () => avatarImg.style.transform = 'scale(1.15)';
-                    avatarImg.onmouseout = () => avatarImg.style.transform = 'scale(1)';
-                    
-                    const userInfo = document.createElement('div');
-                    userInfo.style.display = 'flex';
-                    userInfo.style.flexDirection = 'column';
-                    
-              const roleBadge = document.createElement('span');
-              roleBadge.className = 'user-role-badge';
-              roleBadge.textContent = payload.username === 'Yinch' ? '伺服器/網頁代理' : (payload.role === 'admin' ? '管理員' : '使用者');
-                    
-                    const usernameText = document.createElement('span');
-                    usernameText.style.fontWeight = '600';
-                    usernameText.textContent = payload.username;
-                    
-                    userInfo.appendChild(roleBadge);
-                    userInfo.appendChild(usernameText);
-                    avatarContainer.appendChild(avatarImg);
-                    avatarContainer.appendChild(userInfo);
+                    isUserLoggedIn = true;
+                    userData.username = payload.username;
+                    userData.role = payload.role;
 
-                    // 獲取最新Profile頭像
-                    let finalAvatarUrl = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(payload.username)}`;
+                    const uploadSection = document.getElementById('uploadSection');
+                    if (uploadSection) uploadSection.style.display = 'block';
+
                     try {
                         const profileRes = await fetch(`${BACKEND_URL}/api/auth/profile`, {
                             headers: { 'Authorization': `Bearer ${token}` }
@@ -98,48 +283,22 @@
                         if (profileRes.ok) {
                             const profileData = await profileRes.json();
                             if (profileData.avatar) {
-                                finalAvatarUrl = `${BACKEND_URL}/uploads/${profileData.avatar}`;
+                                userData.avatar = `${BACKEND_URL}/uploads/${profileData.avatar}`;
                             }
                         }
-                    } catch (err) {
-                        console.error('獲取頭像失敗，使用預設頭像:', err);
-                    }
-                    avatarImg.src = finalAvatarUrl;
+                    } catch (err) { console.error(err); }
 
-                    // 同步更新左上角的logo-avatar
-          const logoAvatar = document.querySelector('.logo-avatar');
-          if (logoAvatar) {
-              logoAvatar.src = finalAvatarUrl;
-              
-              // 添加使用者名稱和角色標籤
-              const avatarInfo = document.createElement('div');
-              avatarInfo.style.display = 'flex';
-              avatarInfo.style.flexDirection = 'column';
-              avatarInfo.style.marginLeft = '10px';
-              
-              const username = document.createElement('span');
-              username.style.fontWeight = '600';
-              username.style.color = '#e6eef8';
-              username.textContent = payload.username;
-              
-              const roleBadge = document.createElement('span');
-              roleBadge.className = 'user-role-badge';
-              roleBadge.textContent = payload.role === 'admin' ? '管理員' : '使用者';
-              
-              avatarInfo.appendChild(username);
-              avatarInfo.appendChild(roleBadge);
-              logoAvatar.parentNode.insertBefore(avatarInfo, logoAvatar.nextSibling);
-          }
+                    renderBrandZone();
 
-                    // 點擊更換頭像功能
+                    // 大頭貼更換
                     const avatarInput = document.createElement('input');
                     avatarInput.type = 'file';
                     avatarInput.accept = 'image/*';
                     avatarInput.style.display = 'none';
                     document.body.appendChild(avatarInput);
 
-                    avatarImg.addEventListener('click', () => {
-                        avatarInput.click();
+                    mainLogoImg.addEventListener('click', () => {
+                        if (!siteHeader.classList.contains('scrolled')) avatarInput.click();
                     });
 
                     avatarInput.addEventListener('change', async () => {
@@ -154,24 +313,52 @@
                                 headers: { 'Authorization': `Bearer ${token}` },
                                 body: formData
                             });
-
                             if (uploadRes.ok) {
                                 const uploadData = await uploadRes.json();
                                 alert('頭像上傳成功！');
-                                avatarImg.src = `${BACKEND_URL}/uploads/${uploadData.avatar}`;
-                            } else {
-                                const errMsg = await uploadRes.text();
-                                alert(`更換頭像失敗: ${errMsg}`);
+                                userData.avatar = `${BACKEND_URL}/uploads/${uploadData.avatar}`;
+                                renderBrandZone();
                             }
-                        } catch (err) {
-                            console.error('更換頭像錯誤:', err);
-                            alert('更換頭像發生錯誤，請稍後再試。');
-                        }
+                        } catch (err) { console.error(err); }
                     });
 
-                    const avatarLi = document.createElement('li');
-                    avatarLi.appendChild(avatarContainer);
-                    navUl.appendChild(avatarLi);
+                    // 媒體表單上傳
+                    const mediaForm = document.getElementById('mediaUploadForm');
+                    if (mediaForm) {
+                        mediaForm.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const uploadType = document.getElementById('uploadType').value;
+                            const title = document.getElementById('mediaTitle').value;
+                            const fileField = document.getElementById('mediaFile');
+                            
+                            if (fileField.files.length === 0) return;
+                            const file = fileField.files[0];
+                            const formData = new FormData();
+                            formData.append('title', title);
+                            
+                            let apiEndpoint = `${BACKEND_URL}/api/videos/upload`;
+                            if (uploadType === 'video') {
+                                formData.append('video', file);
+                            } else {
+                                formData.append('image', file);
+                                apiEndpoint = `${BACKEND_URL}/api/images/upload`;
+                            }
+
+                            try {
+                                const res = await fetch(apiEndpoint, {
+                                    method: 'POST',
+                                    headers: { 'Authorization': `Bearer ${token}` },
+                                    body: formData
+                                });
+                                if (res.ok) {
+                                    alert(`${uploadType === 'video' ? '影片' : '圖片'}上傳成功！`);
+                                    window.location.reload();
+                                } else {
+                                    alert('上傳失敗');
+                                }
+                            } catch (err) { console.error(err); }
+                        });
+                    }
                 }
 
                 if (payload && payload.username === 'Yinch') {
@@ -195,6 +382,8 @@
                 });
                 logoutLi.appendChild(logoutBtn);
                 navUl.appendChild(logoutLi);
+            } else {
+                renderBrandZone();
             }
         });
     </script>
