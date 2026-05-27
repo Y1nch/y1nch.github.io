@@ -25,52 +25,94 @@
             margin-bottom: 2px;
         }
 
-        /* 第一影格：首頁主視覺（佔滿一螢幕） */
-        .hero-section {
-            height: calc(100vh - 70px); /* 扣除 header 高度 */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: #ffffff;
-        }
-
-        /* 🚀 第二影格：開發人員 Yinch 專屬名片區（佔滿整個畫面） */
-        .developer-profile-section {
+        /* 統一的全螢幕區塊設定 */
+        section {
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-            color: #ffffff;
-            padding: 20px;
             box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
         }
 
+        /* 第一影格：首頁主視覺 */
+        .hero-section {
+            height: calc(100vh - 70px); /* 扣除 header */
+            flex-direction: column;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        /* 🚀 第二影格：開發人員 Yinch 區 */
+        .developer-profile-section {
+            flex-direction: column; /* 讓標題與名片上下排列 */
+            background-image: url('assets/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* ❄️ 第三影格：管理團隊區 (Snow) */
+        .admin-team-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            flex-direction: column;
+            color: #ffffff;
+        }
+
+        /* 🖤 調整後的半透明遮罩：調低透明度至 0.55，讓背景圖片更清晰可見 */
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.55); 
+            z-index: 1;
+        }
+
+        /* 兩格卡片的容器 */
+        .admin-grid {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 兩格並排 */
+            gap: 40px;
+            max-width: 1000px;
+            width: 90%;
+        }
+
+        /* 通用卡片樣式 */
         .profile-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 2;
+            background: rgba(15, 23, 42, 0.45); /* 稍微加深卡片底色，確保文字清晰 */
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px;
             padding: 40px;
-            max-width: 500px;
-            width: 100%;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px); /* 加強毛玻璃模糊度，讓背景透得更精緻 */
+            -webkit-backdrop-filter: blur(20px);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-10px);
+            border-color: #3b82f6;
         }
 
         .profile-card img {
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            ject-fit: cover;
+            object-fit: cover;
             border: 4px solid #3b82f6;
             margin-bottom: 20px;
         }
 
         .profile-card h2 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             margin: 10px 0;
             letter-spacing: 1px;
         }
@@ -79,12 +121,42 @@
             color: #3b82f6;
             font-weight: 600;
             margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
         }
 
         .profile-card p {
-            color: #94a3b8;
+            color: #cbd5e1;
             line-height: 1.6;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+        }
+
+        /* 頂部大標題字幕 */
+        .section-tag {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+
+        /* 🎬 滾動進入的小動畫樣式 (Scroll Animation) */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(40px); /* 初始位置往下偏移 40px */
+            transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), 
+                        transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* 當滑動到該區域時，JS 會自動加上這個 class 來觸發動畫 */
+        .animate-on-scroll.appear {
+            opacity: 1;
+            transform: translateY(0); /* 歸位並淡入 */
         }
     </style>
 </head>
@@ -111,15 +183,41 @@
 
     <section class="hero-section">
         <h2 style="font-size: 2.5rem; margin-bottom: 16px;">遊戲精華分享網頁</h2>
-        <p style="color: #94a3b8; font-size: 1.2rem;">這裡收集了各種精彩的遊戲瞬間！往下滾動查看更多。</p>
+        <p style="color: #94a3b8; font-size: 1.2rem;">這裡可以發布遊戲的精采時刻。往下滾動查看更多。</p>
     </section>
 
     <section class="developer-profile-section">
-        <div class="profile-card">
+        <div class="video-overlay"></div>
+        
+        <h2 class="section-tag animate-on-scroll">開發人員</h2>
+        
+        <div class="profile-card animate-on-scroll" style="max-width: 500px;">
             <img src="assets/profile.jpg" alt="Yinch">
             <h2>Yinch</h2>
             <div class="title">網頁創作者 / 伺服器代理</div>
-            <p>歡迎來到我的個人開發專案！本網站目前專用於分享遊戲highlight精華等，提供高效的影片與圖像上傳空間。持續優化使用者體驗中。</p>
+            <p>目前為個人開發專案！本網站專為分享精采或有紀念性影片/圖片，提供簡單的影片與圖像上傳空間。持續優化使用者體驗中。</p>
+        </div>
+    </section>
+
+    <section class="admin-team-section">
+        <h2 class="section-tag animate-on-scroll">管理團隊</h2>
+        
+        <div class="admin-grid animate-on-scroll">
+            <div class="profile-card">
+                <img src="assets/profile2.jpg" alt="Snow">
+                <h2>Snow</h2>
+                <div class="title">高級管理員</div>
+                <p>如果發布上的影片想刪除，可以尋求幫助。也可以提出建議</p>
+            </div>
+
+            <div class="profile-card" style="border-style: dashed; background: rgba(255,255,255,0.02);">
+                <div style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: rgba(255,255,255,0.2);">
+                    ?
+                </div>
+                <h2>招募中</h2>
+                <div class="title">管理員空位</div>
+                <p>管理員空位<br></p>
+            </div>
         </div>
     </section>
 
@@ -147,7 +245,7 @@
                 } catch (e) { return null; }
             }
 
-            // 滾動偵測：往下滑時一律切換為 Yinch 名片，回到最頂端才恢復
+            // 滾動偵測：往下滑時一律切換為 Yinch 名片
             window.addEventListener('scroll', () => {
                 if (window.scrollY > 80) {
                     siteHeader.classList.add('scrolled');
@@ -157,7 +255,6 @@
                         <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">Yinch</h1>
                     `;
                     mainLogoImg.style.border = '2px solid #3b82f6';
-                    mainLogoImg.style.cursor = 'default';
                 } else {
                     siteHeader.classList.remove('scrolled');
                     renderBrandZone();
@@ -173,17 +270,37 @@
                         <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">@${userData.username}</h1>
                     `;
                     mainLogoImg.style.border = '2px solid #3b82f6';
-                    mainLogoImg.style.cursor = 'pointer';
                 } else {
                     brandTextZone.innerHTML = `
                         <p class="user-role-badge" style="margin: 0;">歡迎光臨</p>
                         <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">訪客</h1>
                     `;
                     mainLogoImg.style.border = 'none';
-                    mainLogoImg.style.cursor = 'default';
                 }
             }
 
+            /* 💡 滾動進入小動畫的 JS 監聽腳本 */
+            const animatedElements = document.querySelectorAll('.animate-on-scroll');
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15 // 當物件有 15% 進入螢幕畫面時觸發動畫
+            };
+
+            const scrollObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('appear'); // 加上 appear class 觸發 CSS 動畫
+                        // 如果希望每次滑上去再滑下來都有動畫，把下面這行註解掉即可
+                        observer.unobserve(entry.target); 
+                    }
+                });
+            }, observerOptions);
+
+            animatedElements.forEach(el => scrollObserver.observe(el));
+
+
+            // JWT & 登入邏輯保持不變
             if (token && navUl) {
                 const loginBtn = document.getElementById('navLoginBtn');
                 const registerBtn = document.getElementById('navRegisterBtn');
@@ -207,42 +324,9 @@
                             }
                         }
                     } catch (err) { console.error(err); }
-
                     renderBrandZone();
-
-                    // 大頭貼更換
-                    const avatarInput = document.createElement('input');
-                    avatarInput.type = 'file';
-                    avatarInput.accept = 'image/*';
-                    avatarInput.style.display = 'none';
-                    document.body.appendChild(avatarInput);
-
-                    mainLogoImg.addEventListener('click', () => {
-                        if (!siteHeader.classList.contains('scrolled')) avatarInput.click();
-                    });
-
-                    avatarInput.addEventListener('change', async () => {
-                        if (avatarInput.files.length === 0) return;
-                        const file = avatarInput.files[0];
-                        const formData = new FormData();
-                        formData.append('avatar', file);
-
-                        try {
-                            const uploadRes = await fetch(`${BACKEND_URL}/api/auth/avatar`, {
-                                method: 'POST',
-                                headers: { 'Authorization': `Bearer ${token}` },
-                                body: formData
-                            });
-                            if (uploadRes.ok) {
-                                const uploadData = await uploadRes.json();
-                                alert('頭像上傳成功！');
-                                userData.avatar = `${BACKEND_URL}/uploads/${uploadData.avatar}`;
-                                renderBrandZone();
-                            }
-                        } catch (err) { console.error(err); }
-                    });
                 }
-
+                
                 if (payload && payload.username === 'Yinch') {
                     const adminLi = document.createElement('li');
                     const adminLink = document.createElement('a');
@@ -259,7 +343,6 @@
                 logoutBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     localStorage.removeItem('token');
-                    alert('已成功登出！');
                     window.location.reload();
                 });
                 logoutLi.appendChild(logoutBtn);

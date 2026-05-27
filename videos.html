@@ -8,22 +8,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
     <style>
+        /* 讓導覽列清單變成水平排列 */
+        #navLinksList {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            align-items: center;
+        }
+
         .user-role-badge {
             font-size: 0.7rem;
             color: #94a3b8;
             margin-bottom: 2px;
         }
-        /* 滾動時隱藏使用者細節，切換成創作者名片 */
+        
         .site-header.scrolled #brandTextZone {
             display: flex !important;
             flex-direction: column !important;
         }
 
-        /* ✨ 影片上傳與展示區域的專屬精美樣式 */
+        /* ✨ 影片上傳與展示區域 - 優化留白機制 */
         .video-container {
             max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
+            margin: 40px auto 0 auto; /* 移除原本的下方外距 */
+            padding: 0 20px 80px 20px; /* 💡 關鍵：在底部加入 80px 的內距，確保滑到底部時有完美的留白空間 */
         }
 
         .upload-section {
@@ -110,10 +121,162 @@
             background: #2563eb;
         }
 
+        /* 媒體卡片網格 */
         .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        /* 精美媒體卡片樣式 */
+        .media-card {
+            position: relative;
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .media-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+        }
+
+        .media-preview-zone {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 比例 */
+            background: #0f172a;
+        }
+
+        .media-preview-zone video,
+        .media-preview-zone img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 讓圖片游標變成放大鏡，暗示可以點擊 */
+        .media-preview-zone img {
+            cursor: zoom-in;
+            transition: opacity 0.2s;
+        }
+        .media-preview-zone img:hover {
+            opacity: 0.9;
+        }
+
+        .media-info-zone {
+            padding: 20px;
+        }
+
+        .media-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0 0 12px 0;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .media-meta-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 12px;
+        }
+
+        .media-author {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        /* 🗑️ 管理員/Yinch 專屬刪除按鈕 */
+        .delete-media-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: background 0.2s, transform 0.2s;
+        }
+        .delete-media-btn:hover {
+            background: #ef4444;
+            transform: scale(1.1);
+        }
+
+        /* 🔍 圖片放大燈箱 (Lightbox Modal) */
+        .image-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .image-lightbox.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .image-lightbox.active .lightbox-content {
+            transform: scale(1);
+        }
+        .lightbox-close-tip {
+            position: absolute;
+            bottom: 30px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        /* 滾動動畫特效 */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .animate-on-scroll.appear {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -160,16 +323,20 @@
         </section>
 
         <section style="margin-bottom: 20px;">
-            <h2 style="color: #ffffff; font-size: 1.8rem; margin-bottom: 20px;">熱門精華影片</h2>
+            <h2 style="color: #ffffff; font-size: 1.8rem; margin-bottom: 20px;">熱門玩家精華分享</h2>
             <div class="video-grid" id="videoGrid">
                 <div style="color: #94a3b8; grid-column: 1/-1; text-align: center; padding: 40px;">
-                    影片載入中，請稍候...
+                    媒體檔案載入中，請稍候...
                 </div>
             </div>
         </section>
     </main>
 
-    <script src="scripts/videos.js"></script>
+    <div class="image-lightbox" id="imageLightbox">
+        <img src="" alt="放大圖" class="lightbox-content" id="lightboxImg">
+        <div class="lightbox-close-tip">點擊任何地方關閉</div>
+    </div>
+
     <script>
         function switchUploadType(type) {
             const uploadTypeInput = document.getElementById('uploadType');
@@ -209,6 +376,10 @@
             const siteHeader = document.getElementById('siteHeader');
             const mainLogoImg = document.getElementById('mainLogoImg');
             const brandTextZone = document.getElementById('brandTextZone');
+            const videoGrid = document.getElementById('videoGrid');
+            
+            const imageLightbox = document.getElementById('imageLightbox');
+            const lightboxImg = document.getElementById('lightboxImg');
             
             const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                 ? 'http://localhost:3000'
@@ -226,7 +397,13 @@
                 } catch (e) { return null; }
             }
 
-            // 滾動偵測
+            const payload = token ? parseJwt(token) : null;
+            if (payload && payload.username) {
+                isUserLoggedIn = true;
+                userData.username = payload.username;
+                userData.role = payload.role;
+            }
+
             window.addEventListener('scroll', () => {
                 if (window.scrollY > 50) {
                     siteHeader.classList.add('scrolled');
@@ -250,118 +427,249 @@
                         <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">@${userData.username}</h1>
                     `;
                     mainLogoImg.style.border = '2px solid #3b82f6';
-                    mainLogoImg.style.cursor = 'pointer';
                 } else {
                     brandTextZone.innerHTML = `
                         <p class="user-role-badge" style="margin: 0;">歡迎光臨</p>
                         <h1 class="site-title" style="font-size: 1.3rem; margin: 0;">訪客</h1>
                     `;
                     mainLogoImg.style.border = 'none';
-                    mainLogoImg.style.cursor = 'default';
                 }
             }
+
+            function formatCustomDate(dateString) {
+                if (!dateString) return '未知時間';
+                const d = new Date(dateString);
+                return `${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}`;
+            }
+
+            async function deleteMedia(id, type) {
+                if (!confirm(`確定要刪除此部${type === 'video' ? '影片' : '圖片'}嗎？此操作無法還原。`)) return;
+                
+                const endpoint = type === 'video' ? `${BACKEND_URL}/api/videos/${id}` : `${BACKEND_URL}/api/images/${id}`;
+                try {
+                    const res = await fetch(endpoint, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        alert('刪除成功！');
+                        window.location.reload();
+                    } else {
+                        alert('刪除失敗，請檢查權限。');
+                    }
+                } catch (error) {
+                    console.error('刪除請求出錯:', error);
+                    alert('無法連線到伺服器。');
+                }
+            }
+
+            async function fetchAndRenderMedia() {
+                try {
+                    const [videosRes, imagesRes] = await Promise.all([
+                        fetch(`${BACKEND_URL}/api/videos`).catch(() => null),
+                        fetch(`${BACKEND_URL}/api/images`).catch(() => null)
+                    ]);
+
+                    let allMedia = [];
+
+                    if (videosRes && videosRes.ok) {
+                        const videos = await videosRes.json();
+                        allMedia = allMedia.concat(videos.map(v => ({ ...v, mediaType: 'video' })));
+                    }
+                    if (imagesRes && imagesRes.ok) {
+                        const images = await imagesRes.json();
+                        allMedia = allMedia.concat(images.map(i => ({ ...i, mediaType: 'image' })));
+                    }
+
+                    allMedia.sort((a, b) => new Date(b.createdAt || b.uploadedAt) - new Date(a.createdAt || a.uploadedAt));
+
+                    if (allMedia.length === 0) {
+                        videoGrid.innerHTML = `
+                            <div style="color: #ef4444; font-weight: 600; font-size: 1.2rem; grid-column: 1/-1; text-align: center; padding: 60px; border: 2px dashed rgba(239, 68, 68, 0.3); border-radius: 12px; background: rgba(239, 68, 68, 0.05);">
+                                ⚠️ 目前沒有影片與圖片！
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    videoGrid.innerHTML = '';
+                    const hasManagePermission = userData.username === 'Yinch' || userData.role === 'admin';
+
+                    allMedia.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'media-card animate-on-scroll';
+
+                        const authorName = item.user?.username || item.username || '神秘玩家';
+                        const timeStamp = item.createdAt || item.uploadedAt;
+                        const mediaId = item._id || item.id;
+                        const fileUrl = `${BACKEND_URL}/uploads/${item.filename || item.url}`;
+                        
+                        let previewHTML = '';
+                        if (item.mediaType === 'video') {
+                            previewHTML = `<video src="${fileUrl}" controls preload="metadata"></video>`;
+                        } else {
+                            previewHTML = `<img src="${fileUrl}" alt="${item.title || '圖片'}" class="clickable-img">`;
+                        }
+
+                        let deleteBtnHTML = '';
+                        if (hasManagePermission && mediaId) {
+                            deleteBtnHTML = `<button class="delete-media-btn" title="刪除此內容">🗑️</button>`;
+                        }
+
+                        card.innerHTML = `
+                            ${deleteBtnHTML}
+                            <div class="media-preview-zone">
+                                ${previewHTML}
+                            </div>
+                            <div class="media-info-zone">
+                                <h3 class="media-card-title">${item.title || '未命名精華'}</h3>
+                                <div class="media-meta-line">
+                                    <span class="media-author">👤 ${authorName}</span>
+                                    <span>📅 ${formatCustomDate(timeStamp)}</span>
+                                </div>
+                            </div>
+                        `;
+
+                        const delBtn = card.querySelector('.delete-media-btn');
+                        if (delBtn) {
+                            delBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                deleteMedia(mediaId, item.mediaType);
+                            });
+                        }
+
+                        if (item.mediaType === 'image') {
+                            const imgEl = card.querySelector('.clickable-img');
+                            if (imgEl) {
+                                imgEl.addEventListener('click', () => {
+                                    lightboxImg.src = fileUrl;
+                                    imageLightbox.classList.add('active');
+                                });
+                            }
+                        }
+
+                        videoGrid.appendChild(card);
+                    });
+
+                    initScrollAnimation();
+
+                } catch (error) {
+                    console.error('載入媒體失敗:', error);
+                    videoGrid.innerHTML = `<div style="color: #ef4444; grid-column: 1/-1; text-align: center; padding: 40px;">伺服器連線失敗，無法載入內容。</div>`;
+                }
+            }
+
+            imageLightbox.addEventListener('click', () => {
+                imageLightbox.classList.remove('active');
+                setTimeout(() => { lightboxImg.src = ''; }, 300);
+            });
+
+            function initScrollAnimation() {
+                const elements = document.querySelectorAll('.animate-on-scroll');
+                const observer = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('appear');
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                elements.forEach(el => observer.observe(el));
+            }
+
+            await fetchAndRenderMedia();
 
             if (token && navUl) {
                 const loginBtn = document.getElementById('navLoginBtn');
                 const registerBtn = document.getElementById('navRegisterBtn');
                 if (loginBtn) loginBtn.closest('li').remove();
                 if (registerBtn) registerBtn.closest('li').remove();
-                
-                const payload = parseJwt(token);
-                if (payload && payload.username) {
-                    isUserLoggedIn = true;
-                    userData.username = payload.username;
-                    userData.role = payload.role;
 
-                    const uploadSection = document.getElementById('uploadSection');
-                    if (uploadSection) uploadSection.style.display = 'block';
+                const uploadSection = document.getElementById('uploadSection');
+                if (uploadSection) uploadSection.style.display = 'block';
+
+                try {
+                    const profileRes = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (profileRes.ok) {
+                        const profileData = await profileRes.json();
+                        if (profileData.avatar) {
+                            userData.avatar = `${BACKEND_URL}/uploads/${profileData.avatar}`;
+                        }
+                    }
+                } catch (err) { console.error(err); }
+
+                renderBrandZone();
+
+                const avatarInput = document.createElement('input');
+                avatarInput.type = 'file';
+                avatarInput.accept = 'image/*';
+                avatarInput.style.display = 'none';
+                document.body.appendChild(avatarInput);
+
+                mainLogoImg.addEventListener('click', () => {
+                    if (!siteHeader.classList.contains('scrolled')) avatarInput.click();
+                });
+
+                avatarInput.addEventListener('change', async () => {
+                    if (avatarInput.files.length === 0) return;
+                    const formData = new FormData();
+                    formData.append('avatar', avatarInput.files[0]);
 
                     try {
-                        const profileRes = await fetch(`${BACKEND_URL}/api/auth/profile`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
+                        const uploadRes = await fetch(`${BACKEND_URL}/api/auth/avatar`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}` },
+                            body: formData
                         });
-                        if (profileRes.ok) {
-                            const profileData = await profileRes.json();
-                            if (profileData.avatar) {
-                                userData.avatar = `${BACKEND_URL}/uploads/${profileData.avatar}`;
-                            }
+                        if (uploadRes.ok) {
+                            const uploadData = await uploadRes.json();
+                            alert('頭像上傳成功！');
+                            userData.avatar = `${BACKEND_URL}/uploads/${uploadData.avatar}`;
+                            renderBrandZone();
                         }
                     } catch (err) { console.error(err); }
+                });
 
-                    renderBrandZone();
-
-                    // 大頭貼更換
-                    const avatarInput = document.createElement('input');
-                    avatarInput.type = 'file';
-                    avatarInput.accept = 'image/*';
-                    avatarInput.style.display = 'none';
-                    document.body.appendChild(avatarInput);
-
-                    mainLogoImg.addEventListener('click', () => {
-                        if (!siteHeader.classList.contains('scrolled')) avatarInput.click();
-                    });
-
-                    avatarInput.addEventListener('change', async () => {
-                        if (avatarInput.files.length === 0) return;
-                        const file = avatarInput.files[0];
+                const mediaForm = document.getElementById('mediaUploadForm');
+                if (mediaForm) {
+                    mediaForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const uploadType = document.getElementById('uploadType').value;
+                        const title = document.getElementById('mediaTitle').value;
+                        const fileField = document.getElementById('mediaFile');
+                        
+                        if (fileField.files.length === 0) return;
+                        const file = fileField.files[0];
                         const formData = new FormData();
-                        formData.append('avatar', file);
+                        formData.append('title', title);
+                        
+                        let apiEndpoint = `${BACKEND_URL}/api/videos/upload`;
+                        if (uploadType === 'video') {
+                            formData.append('video', file);
+                        } else {
+                            formData.append('image', file);
+                            apiEndpoint = `${BACKEND_URL}/api/images/upload`;
+                        }
 
                         try {
-                            const uploadRes = await fetch(`${BACKEND_URL}/api/auth/avatar`, {
+                            const res = await fetch(apiEndpoint, {
                                 method: 'POST',
                                 headers: { 'Authorization': `Bearer ${token}` },
                                 body: formData
                             });
-                            if (uploadRes.ok) {
-                                const uploadData = await uploadRes.json();
-                                alert('頭像上傳成功！');
-                                userData.avatar = `${BACKEND_URL}/uploads/${uploadData.avatar}`;
-                                renderBrandZone();
+                            if (res.ok) {
+                                alert(`${uploadType === 'video' ? '影片' : '圖片'}上傳成功！`);
+                                window.location.reload();
+                            } else {
+                                alert('上傳失敗');
                             }
                         } catch (err) { console.error(err); }
                     });
-
-                    // 媒體表單上傳
-                    const mediaForm = document.getElementById('mediaUploadForm');
-                    if (mediaForm) {
-                        mediaForm.addEventListener('submit', async (e) => {
-                            e.preventDefault();
-                            const uploadType = document.getElementById('uploadType').value;
-                            const title = document.getElementById('mediaTitle').value;
-                            const fileField = document.getElementById('mediaFile');
-                            
-                            if (fileField.files.length === 0) return;
-                            const file = fileField.files[0];
-                            const formData = new FormData();
-                            formData.append('title', title);
-                            
-                            let apiEndpoint = `${BACKEND_URL}/api/videos/upload`;
-                            if (uploadType === 'video') {
-                                formData.append('video', file);
-                            } else {
-                                formData.append('image', file);
-                                apiEndpoint = `${BACKEND_URL}/api/images/upload`;
-                            }
-
-                            try {
-                                const res = await fetch(apiEndpoint, {
-                                    method: 'POST',
-                                    headers: { 'Authorization': `Bearer ${token}` },
-                                    body: formData
-                                });
-                                if (res.ok) {
-                                    alert(`${uploadType === 'video' ? '影片' : '圖片'}上傳成功！`);
-                                    window.location.reload();
-                                } else {
-                                    alert('上傳失敗');
-                                }
-                            } catch (err) { console.error(err); }
-                        });
-                    }
                 }
 
-                if (payload && payload.username === 'Yinch') {
+                if (userData.username === 'Yinch') {
                     const adminLi = document.createElement('li');
                     const adminLink = document.createElement('a');
                     adminLink.href = 'admin.html';
